@@ -1,0 +1,6 @@
+[submodule "addons/gdlua"]
+	path = addons/gdlua
+	url = ./addons/gdlua
+[submodule "addons/gdsquad"]
+	path = addons/gdsquad
+	url = ./addons/gdsquad
