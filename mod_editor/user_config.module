@@ -1,0 +1,12 @@
+[global]
+UIName = User Mod
+Description = Custom User Data
+Playable = 0
+ModFolder = user_config
+ModVersion = 1.0
+RequireEngine = 0
+
+DataFolder.1 = Data
+
+RequiredMod.1 = mod_editor_data
+

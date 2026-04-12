@@ -1,0 +1,13 @@
+font = 
+{
+	type 		= "FreeType2";
+	name 		= "Monospace";
+	file		= "Monaspace Neon Var.ttf";
+	weight		= 500;
+
+	sizeDefault 	= 16;
+
+	spaceChar	= " ";
+	missingChar	= "?";
+}
+

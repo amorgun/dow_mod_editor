@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=3 uid="uid://bjf57revhmmg6"]
+
+[ext_resource type="Script" uid="uid://blx4avpxw81xt" path="res://mod_editor/codesearch.gd" id="1_bgxgn"]
+[ext_resource type="Theme" uid="uid://d1nvh07u7621v" path="res://mod_editor/scenes/themes/ui_monospace.tres" id="2_f1yqm"]
+
+[node name="Search" type="HBoxContainer"]
+custom_minimum_size = Vector2(400, 0)
+size_flags_horizontal = 8
+theme_override_constants/separation = 3
+script = ExtResource("1_bgxgn")
+
+[node name="LineEdit" type="LineEdit" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("2_f1yqm")
+theme_override_constants/minimum_character_width = 14
+placeholder_text = "Find"
+emoji_menu_enabled = false
+clear_button_enabled = true
+
+[node name="MatchCase" type="Button" parent="."]
+modulate = Color(0.4117647, 0.4117647, 0.4117647, 1)
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+toggle_mode = true
+
+[node name="Label" type="Label" parent="."]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 2
+text = "No results"
+clip_text = true
+
+[node name="Prev" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="Next" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[connection signal="gui_input" from="LineEdit" to="." method="_on_search_text_gui_input"]
+[connection signal="text_changed" from="LineEdit" to="." method="_on_search_text_changed"]
+[connection signal="toggled" from="MatchCase" to="." method="_on_match_case_toggled"]
+[connection signal="pressed" from="Prev" to="." method="_on_prev_pressed"]
+[connection signal="pressed" from="Next" to="." method="_on_next_pressed"]

@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://cl3sxr7tcantg"]
+
+[ext_resource type="FontFile" uid="uid://bdiebab8xcu0q" path="res://export/linux/mod_editor_data/data/font/Monaspace Krypton Var.ttf" id="1_5sn0l"]
+
+[resource]
+default_font_size = 14
+TextEdit/fonts/font = ExtResource("1_5sn0l")

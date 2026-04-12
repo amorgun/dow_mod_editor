@@ -1,0 +1,849 @@
+[gd_scene format=3 uid="uid://d4jpvrdu1bfwp"]
+
+[ext_resource type="Theme" uid="uid://b2ocuhxe1s4di" path="res://mod_editor/scenes/themes/ui.tres" id="1_6255r"]
+[ext_resource type="Theme" uid="uid://d1nvh07u7621v" path="res://mod_editor/scenes/themes/ui_monospace.tres" id="1_lu55j"]
+[ext_resource type="Theme" uid="uid://cl3sxr7tcantg" path="res://mod_editor/scenes/themes/codeedit.tres" id="1_shc73"]
+[ext_resource type="Script" uid="uid://bjxqkw5gm31fs" path="res://mod_editor/mod_editor.gd" id="2_psthy"]
+[ext_resource type="Script" uid="uid://dka3hib6uvxmv" path="res://mod_editor/preferences_popup.gd" id="3_lu55j"]
+[ext_resource type="Script" uid="uid://hbbd0otu08cy" path="res://mod_editor/help.gd" id="3_o21qr"]
+[ext_resource type="Script" uid="uid://1q4i4ombw20i" path="res://mod_editor/file_browser.gd" id="4_7lwh1"]
+[ext_resource type="Script" uid="uid://q4hw6gqc17v7" path="res://mod_editor/preferences_lookup_folder.gd" id="4_lu55j"]
+[ext_resource type="Script" uid="uid://d2oknoy57kyud" path="res://mod_editor/file_tree.gd" id="5_k0d43"]
+[ext_resource type="Script" uid="uid://dqtf32cejxwnq" path="res://mod_editor/preview_window.gd" id="6_248tv"]
+[ext_resource type="Script" uid="uid://0ta178485bt1" path="res://mod_editor/preview_windows/preview_model.gd" id="7_eduue"]
+[ext_resource type="PackedScene" uid="uid://cjvqs4rirwkd4" path="res://addons/gdsquad/scenes/camera_controller.tscn" id="8_du8ri"]
+[ext_resource type="PackedScene" uid="uid://e0o507w2nm4k" path="res://addons/gdsquad/scenes/model.tscn" id="9_2lwek"]
+[ext_resource type="PackedScene" uid="uid://cdhlwvvospukk" path="res://addons/gdsquad/scenes/map.tscn" id="10_wvwbj"]
+[ext_resource type="Script" uid="uid://b5a8yxoljw12p" path="res://mod_editor/preview_windows/preview_text.gd" id="14_305us"]
+[ext_resource type="PackedScene" uid="uid://bva07yg60lnt" path="res://mod_editor/scenes/preview_top_menu.tscn" id="15_tmbvw"]
+[ext_resource type="Script" uid="uid://7sjqjigrluhg" path="res://mod_editor/preview_windows/preview_image.gd" id="16_pyr3p"]
+[ext_resource type="PackedScene" uid="uid://bjf57revhmmg6" path="res://mod_editor/scenes/code_searchbar.tscn" id="17_g07yf"]
+[ext_resource type="Script" uid="uid://cjtiachugiaj4" path="res://mod_editor/preview_windows/preview_chunky.gd" id="17_r2ypo"]
+[ext_resource type="Script" uid="uid://b33i81k46yyp7" path="res://mod_editor/message_window.gd" id="18_kovvv"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_d0h0h"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_7k6k4"]
+sky_material = SubResource("ProceduralSkyMaterial_d0h0h")
+
+[sub_resource type="Environment" id="Environment_fltsl"]
+background_mode = 2
+sky = SubResource("Sky_7k6k4")
+ambient_light_source = 3
+ambient_light_color = Color(0.8, 0.8, 0.8, 1)
+ambient_light_sky_contribution = 0.25
+reflected_light_source = 2
+tonemap_mode = 3
+
+[node name="ModEditor" type="Control" unique_id=408298215]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("1_6255r")
+script = ExtResource("2_psthy")
+metadata/_edit_horizontal_guides_ = [-9.0]
+
+[node name="FileDialog" type="FileDialog" parent="." unique_id=210939005]
+title = "Select a Mod file"
+ok_button_text = "Open"
+mode_overrides_title = false
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.module")
+show_hidden_files = true
+use_native_dialog = true
+
+[node name="SplitContainer" type="SplitContainer" parent="." unique_id=1564487235]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+dragger_visibility = 2
+vertical = true
+
+[node name="MenuBar" type="MenuBar" parent="SplitContainer" unique_id=344358902]
+layout_mode = 2
+
+[node name="File" type="PopupMenu" parent="SplitContainer/MenuBar" unique_id=871426792]
+item_count = 3
+item_0/text = "New Mod"
+item_0/id = 0
+item_0/disabled = true
+item_1/text = "Open Mod"
+item_1/id = 1
+item_2/text = "Exit"
+item_2/id = 2
+
+[node name="Edit" type="PopupMenu" parent="SplitContainer/MenuBar" unique_id=2064298130]
+item_count = 1
+item_0/text = "Preferences"
+item_0/id = 0
+
+[node name="PreferencesPopup" type="Window" parent="SplitContainer/MenuBar/Edit" unique_id=170846211]
+oversampling_override = 1.0
+title = "Preferences"
+initial_position = 4
+size = Vector2i(700, 500)
+visible = false
+exclusive = true
+always_on_top = true
+min_size = Vector2i(450, 0)
+script = ExtResource("3_lu55j")
+
+[node name="HBoxContainer" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup" unique_id=1719220094]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VSplitContainer" type="HSplitContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer" unique_id=803180574]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offsets = PackedInt32Array(-18)
+dragging_enabled = false
+dragger_visibility = 1
+split_offset = -18
+
+[node name="Buttons" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer" unique_id=402892396]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="TabContainer" type="TabContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer" unique_id=1350380828]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+current_tab = 0
+tabs_visible = false
+
+[node name="General" type="MarginContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer" unique_id=1690489744]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+metadata/_tab_index = 0
+
+[node name="GridContainer" type="GridContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General" unique_id=1942253747]
+layout_mode = 2
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="Label" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=759436236]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Config Mod "
+vertical_alignment = 1
+
+[node name="ConfigMod" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=168460813]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Value" type="OptionButton" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ConfigMod" unique_id=577518389]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ConfigMod" unique_id=60795670]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Open Folder"
+
+[node name="Label2" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=1305215534]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Number of Kept Tabs "
+vertical_alignment = 1
+
+[node name="LastTabs" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=430401196]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Value" type="SpinBox" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LastTabs" unique_id=70459842]
+layout_mode = 2
+min_value = 1.0
+value = 1.0
+select_all_on_focus = true
+
+[node name="Label3" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=329796573]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Shadow Folder"
+vertical_alignment = 1
+
+[node name="ShadowFolder" type="LineEdit" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=1475768034]
+layout_mode = 2
+size_flags_horizontal = 3
+select_all_on_focus = true
+
+[node name="Label4" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=306218960]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Extra Lookup Folders"
+
+[node name="LookupFolders" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=681633977]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Template" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders" unique_id=1776302566]
+visible = false
+layout_mode = 2
+script = ExtResource("4_lu55j")
+
+[node name="Path" type="LineEdit" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=1988982628]
+layout_mode = 2
+size_flags_horizontal = 3
+select_all_on_focus = true
+
+[node name="SelectButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=1781746218]
+layout_mode = 2
+text = "Pick"
+
+[node name="RemoveButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=431031352]
+layout_mode = 2
+text = "Remove"
+
+[node name="FileDialog" type="FileDialog" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=433368237]
+title = "Select a Folder"
+ok_button_text = "Select"
+mode_overrides_title = false
+file_mode = 2
+access = 2
+show_hidden_files = true
+use_native_dialog = true
+
+[node name="AddButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders" unique_id=15677418]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "+Add"
+
+[node name="Tools" type="MarginContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer" unique_id=378584230]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+metadata/_tab_index = 1
+
+[node name="GridContainer" type="GridContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools" unique_id=1429774675]
+layout_mode = 2
+columns = 2
+
+[node name="Label" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=1952528063]
+layout_mode = 2
+text = "Blender Executable "
+
+[node name="Panel" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=753401720]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BlenderPath" type="LineEdit" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1793379609]
+layout_mode = 2
+size_flags_horizontal = 3
+select_all_on_focus = true
+
+[node name="SelectButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1486465546]
+layout_mode = 2
+text = "Pick"
+
+[node name="TestButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1145849473]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Test"
+
+[node name="BlenderFileDialog" type="FileDialog" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1645087575]
+oversampling_override = 1.0
+title = "Select the Blender Executable"
+size = Vector2i(1017, 360)
+ok_button_text = "Select"
+mode_overrides_title = false
+file_mode = 0
+access = 2
+show_hidden_files = true
+use_native_dialog = true
+
+[node name="CheckPopup" type="Popup" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=230596820]
+oversampling_override = 1.0
+title = "Blender Check Result"
+initial_position = 4
+size = Vector2i(300, 150)
+borderless = false
+always_on_top = true
+
+[node name="MarginContainer" type="MarginContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/CheckPopup" unique_id=1473418573]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+
+[node name="CheckResult" type="RichTextLabel" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/CheckPopup/MarginContainer" unique_id=544778143]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Appearance" type="MarginContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer" unique_id=773037058]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+metadata/_tab_index = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Appearance" unique_id=909969800]
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Appearance/VBoxContainer" unique_id=1583934023]
+layout_mode = 2
+text = "
+To change the Mod Editor appearance, (e.g., fonts, colors, or icons) you can use the Mod Editor itself to modify the configuration files"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Appearance/VBoxContainer" unique_id=162378286]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Open Config Mod"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer" unique_id=1034507481]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="SaveButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer" unique_id=117370136]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Save"
+
+[node name="CloseButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer" unique_id=89208999]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Cancel"
+
+[node name="Help" type="PopupMenu" parent="SplitContainer/MenuBar" unique_id=57852837]
+item_count = 2
+item_0/text = "Logs"
+item_0/id = 1
+item_1/text = "About"
+item_1/id = 0
+script = ExtResource("3_o21qr")
+
+[node name="AboutPopup" type="Popup" parent="SplitContainer/MenuBar/Help" unique_id=2070258987]
+initial_position = 2
+size = Vector2i(165, 69)
+borderless = false
+always_on_top = true
+
+[node name="RichTextLabel" type="RichTextLabel" parent="SplitContainer/MenuBar/Help/AboutPopup" unique_id=1534725170]
+offset_right = 295.0
+offset_bottom = 207.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[p][b]Mod Browser v0.1[/b][/p]
+[p]Developed on [color=#4285f4][url=https://github.com/amorgun/dow_mod_editor]github[/url][/color][/p]
+[p]Drop a 🌟star🌟 there![/p]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 2
+
+[node name="VSplitMessages" type="VSplitContainer" parent="SplitContainer" unique_id=909693580]
+layout_mode = 2
+dragging_enabled = false
+dragger_visibility = 2
+
+[node name="FileBrowser" type="HSplitContainer" parent="SplitContainer/VSplitMessages" unique_id=1800611777]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offsets = PackedInt32Array(350)
+split_offset = 350
+script = ExtResource("4_7lwh1")
+
+[node name="FileTree" type="Tree" parent="SplitContainer/VSplitMessages/FileBrowser" unique_id=1148444185]
+layout_mode = 2
+theme = ExtResource("1_lu55j")
+hide_root = true
+select_mode = 1
+auto_tooltip = false
+script = ExtResource("5_k0d43")
+
+[node name="LoadingIconsTimer" type="Timer" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree" unique_id=1390868038]
+wait_time = 0.25
+autostart = true
+
+[node name="RmbMenu" type="PopupMenu" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree" unique_id=2034682886]
+size = Vector2i(100, 10)
+theme = ExtResource("1_6255r")
+
+[node name="FinishedTaskCleanup" type="Timer" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree" unique_id=230107566]
+wait_time = 15.0
+autostart = true
+ignore_time_scale = true
+
+[node name="OpenModPrompt" type="Control" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree" unique_id=887453829]
+layout_mode = 1
+anchor_left = 0.20285714
+anchor_top = 0.15808824
+anchor_right = 0.8142857
+anchor_bottom = 0.2977941
+metadata/_edit_use_anchors_ = true
+
+[node name="Button" type="Button" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree/OpenModPrompt" unique_id=461835847]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -45.5
+offset_top = -14.0
+offset_right = 45.5
+offset_bottom = 14.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Open a Mod"
+
+[node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree/OpenModPrompt" unique_id=593285159]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -62.0
+offset_right = 62.0
+offset_bottom = 20.0
+grow_horizontal = 2
+text = "No open mods yet"
+
+[node name="PreviewWindows" type="TabContainer" parent="SplitContainer/VSplitMessages/FileBrowser" unique_id=944148863]
+layout_mode = 2
+current_tab = 0
+tabs_visible = false
+
+[node name="PreviewWindow" type="TabContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows" unique_id=67337640]
+layout_mode = 2
+size_flags_horizontal = 3
+current_tab = 0
+clip_tabs = false
+script = ExtResource("6_248tv")
+metadata/_tab_index = 0
+
+[node name="Error" type="CenterContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=95183008]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Error" unique_id=21819628]
+layout_mode = 2
+text = "Cannot parse file"
+
+[node name="Model" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=1099297749]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+script = ExtResource("7_eduue")
+metadata/_tab_index = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" unique_id=688873791]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer" unique_id=131555023]
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath(".")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath(".")
+focus_mode = 2
+stretch = true
+mouse_target = true
+
+[node name="CameraTimer" type="Timer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" unique_id=426200711]
+wait_time = 0.7
+
+[node name="SubViewport" type="SubViewport" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" unique_id=1425931178]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+msaa_3d = 2
+size = Vector2i(2, 2)
+render_target_update_mode = 0
+
+[node name="MenuButton" type="MenuButton" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1411009158]
+offset_right = 38.0
+offset_bottom = 31.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "Edit"
+flat = false
+item_count = 2
+popup/item_0/text = "Open in Blender"
+popup/item_0/id = 0
+popup/item_1/text = "Reset Camera"
+popup/item_1/id = 1
+
+[node name="CameraController" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1507099097 instance=ExtResource("8_du8ri")]
+transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364818, 0, -0.17364818, 0.9848077, 0, 0, 0)
+zoom_distance = 3.0
+orbit_speed = 5.0
+orbit_speed_damp_rate = 6.0
+declination_speed = 5.0
+declination_speed_damp_rate = 8.0
+min_declination_angle = -3.141592653589793
+max_declination_angle = 3.141592653589793
+process_input = false
+
+[node name="camera" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport/CameraController" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+fov = 40.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport/CameraController" unique_id=846452295]
+transform = Transform3D(-0.8660256, -0.43301243, 0.24999976, 0.08682404, 0.36216766, 0.92806053, -0.49240357, 0.82543015, -0.27605057, 0, 0, 0)
+light_energy = 0.5
+shadow_enabled = true
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 1.0
+
+[node name="Model" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1040144413 instance=ExtResource("9_2lwek")]
+transform = Transform3D(1, 0, -2.98023e-08, 0, 1, 2.98023e-08, 0, 0, 1, 0, 0, 0)
+
+[node name="Map" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=861393881 instance=ExtResource("10_wvwbj")]
+visible = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1183164790]
+environment = SubResource("Environment_fltsl")
+
+[node name="Text" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=2059010276]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+script = ExtResource("14_305us")
+metadata/_tab_index = 2
+
+[node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" unique_id=1128704356 instance=ExtResource("15_tmbvw")]
+layout_mode = 2
+theme_override_constants/margin_right = 10
+
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/MenuBar" index="0"]
+item_count = 4
+item_0/text = "Collapse All"
+item_0/id = 0
+item_1/text = "Uncollapse All"
+item_1/id = 1
+item_2/text = "Save"
+item_2/id = 2
+item_3/text = "Reload from Compiled"
+item_3/id = 4
+
+[node name="Search" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu" unique_id=1809190982 node_paths=PackedStringArray("codeedit") instance=ExtResource("17_g07yf")]
+layout_mode = 2
+codeedit = NodePath("../../Text")
+
+[node name="Text" type="CodeEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" unique_id=1550508038]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("1_shc73")
+draw_tabs = true
+symbol_lookup_on_click = true
+line_folding = true
+gutters_draw_line_numbers = true
+gutters_draw_fold_gutter = true
+auto_brace_completion_highlight_matching = true
+
+[node name="Timer" type="Timer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" unique_id=391911047]
+wait_time = 0.8
+one_shot = true
+
+[node name="Compiled" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=607663348]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+script = ExtResource("14_305us")
+metadata/_tab_index = 3
+
+[node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" unique_id=983136275 instance=ExtResource("15_tmbvw")]
+layout_mode = 2
+theme_override_constants/margin_right = 10
+
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu/MenuBar" index="0"]
+item_count = 2
+item_0/text = "Collapse All"
+item_0/id = 0
+item_1/text = "Uncollapse All"
+item_1/id = 1
+
+[node name="Search" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu" unique_id=1192488224 node_paths=PackedStringArray("codeedit") instance=ExtResource("17_g07yf")]
+layout_mode = 2
+codeedit = NodePath("../../Text")
+
+[node name="Text" type="CodeEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" unique_id=57651897]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("1_shc73")
+editable = false
+draw_tabs = true
+symbol_lookup_on_click = true
+line_folding = true
+gutters_draw_line_numbers = true
+gutters_draw_fold_gutter = true
+auto_brace_completion_highlight_matching = true
+
+[node name="Timer" type="Timer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" unique_id=1856176471]
+wait_time = 0.8
+one_shot = true
+
+[node name="Image" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=1015818748]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+script = ExtResource("16_pyr3p")
+metadata/_tab_index = 4
+
+[node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" unique_id=293146786 instance=ExtResource("15_tmbvw")]
+layout_mode = 2
+
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu/MenuBar" index="0"]
+item_count = 1
+item_0/text = "Flip"
+item_0/checkable = 1
+item_0/id = 0
+
+[node name="Image" type="TextureRect" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" unique_id=1702509755]
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Links" type="PanelContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=872760865]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+metadata/_tab_index = 5
+
+[node name="Chunky" type="HSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=1486891001]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+split_offsets = PackedInt32Array(160)
+split_offset = 160
+script = ExtResource("17_r2ypo")
+metadata/_tab_index = 6
+
+[node name="Tree" type="Tree" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky" unique_id=2048204922]
+layout_mode = 2
+theme = ExtResource("1_lu55j")
+hide_root = true
+
+[node name="Preview" type="VSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky" unique_id=1146579771]
+layout_mode = 2
+size_flags_horizontal = 3
+dragging_enabled = false
+
+[node name="Header" type="VSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview" unique_id=30295077]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="ShortValues" type="GridContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header" unique_id=567394752]
+layout_mode = 2
+columns = 3
+
+[node name="TypeID" type="HSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues" unique_id=1985551358]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/TypeID" unique_id=1895464161]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("1_6255r")
+text = "TypeID"
+
+[node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/TypeID" unique_id=2018224960]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_lu55j")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+drag_and_drop_selection_enabled = false
+virtual_keyboard_enabled = false
+
+[node name="Version" type="HSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues" unique_id=1008005894]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/Version" unique_id=217069636]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("1_6255r")
+text = "Version"
+
+[node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/Version" unique_id=1344246765]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_lu55j")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+drag_and_drop_selection_enabled = false
+virtual_keyboard_enabled = false
+
+[node name="Size" type="HSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues" unique_id=247758713]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/Size" unique_id=1109177486]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("1_6255r")
+text = "Size"
+
+[node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/Size" unique_id=1178009182]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_lu55j")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+drag_and_drop_selection_enabled = false
+virtual_keyboard_enabled = false
+
+[node name="Name" type="HSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header" unique_id=1381237853]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/Name" unique_id=1014639440]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("1_6255r")
+text = "Name"
+
+[node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/Name" unique_id=362035557]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_lu55j")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+drag_and_drop_selection_enabled = false
+virtual_keyboard_enabled = false
+
+[node name="Hex" type="TextEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview" unique_id=363612847]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("1_lu55j")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+
+[node name="Meta" type="CodeEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=1189934893]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_shc73")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+line_folding = true
+gutters_draw_line_numbers = true
+metadata/_tab_index = 7
+
+[node name="MessageWindow" type="FoldableContainer" parent="SplitContainer/VSplitMessages" unique_id=151826633]
+layout_mode = 2
+size_flags_vertical = 8
+folded = true
+title = "Messages"
+title_text_overrun_behavior = 3
+script = ExtResource("18_kovvv")
+max_messages = 50
+
+[node name="ScrollContainer" type="ScrollContainer" parent="SplitContainer/VSplitMessages/MessageWindow" unique_id=910915202]
+visible = false
+layout_mode = 2
+
+[node name="Messages" type="VBoxContainer" parent="SplitContainer/VSplitMessages/MessageWindow/ScrollContainer" unique_id=1074990570]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ItemTemmplate" type="RichTextLabel" parent="SplitContainer/VSplitMessages/MessageWindow/ScrollContainer/Messages" unique_id=1854718409]
+visible = false
+custom_minimum_size = Vector2(1, 32)
+layout_mode = 2
+focus_mode = 2
+fit_content = true
+selection_enabled = true
+
+[connection signal="file_selected" from="FileDialog" to="." method="_on_mod_file_selected"]
+[connection signal="id_pressed" from="SplitContainer/MenuBar/File" to="." method="_on_file_id_pressed"]
+[connection signal="id_pressed" from="SplitContainer/MenuBar/Edit" to="." method="_on_edit_id_pressed"]
+[connection signal="close_requested" from="SplitContainer/MenuBar/Edit/PreferencesPopup" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_close"]
+[connection signal="open_config_mod" from="SplitContainer/MenuBar/Edit/PreferencesPopup" to="." method="_on_preferences_open_config_mod"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ConfigMod/Button" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_open_config_folder_pressed"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template/SelectButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" method="_pick_folder"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template/RemoveButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" method="_on_remove_button_pressed"]
+[connection signal="dir_selected" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template/FileDialog" to="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" method="_on_file_dialog_dir_selected"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/AddButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_add_extra_path"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/SelectButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_select_blender_path"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/TestButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_test_blender_button_pressed"]
+[connection signal="file_selected" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/BlenderFileDialog" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_filedialog_select_blender_path"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Appearance/VBoxContainer/Button" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_open_config"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer/SaveButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_save"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer/CloseButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_close"]
+[connection signal="id_pressed" from="SplitContainer/MenuBar/Help" to="SplitContainer/MenuBar/Help" method="_on_id_pressed"]
+[connection signal="index_pressed" from="SplitContainer/MenuBar/Help" to="SplitContainer/MenuBar/Help" method="_on_index_pressed"]
+[connection signal="close_requested" from="SplitContainer/MenuBar/Help/AboutPopup" to="SplitContainer/MenuBar/Help" method="_on_about_popup_close_requested"]
+[connection signal="meta_clicked" from="SplitContainer/MenuBar/Help/AboutPopup/RichTextLabel" to="SplitContainer/MenuBar/Help" method="_on_about_label_meta_clicked"]
+[connection signal="gui_input" from="SplitContainer/VSplitMessages/FileBrowser/FileTree" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_gui_input"]
+[connection signal="item_activated" from="SplitContainer/VSplitMessages/FileBrowser/FileTree" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_file_tree_item_activated"]
+[connection signal="item_collapsed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_item_collapsed"]
+[connection signal="item_viewed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree" to="SplitContainer/VSplitMessages/FileBrowser" method="_on_file_tree_item_viewed"]
+[connection signal="mod_closed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree" to="." method="_on_mod_closed"]
+[connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/LoadingIconsTimer" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_timer_timeout"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/RmbMenu" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_rmb_menu_id_pressed"]
+[connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/FinishedTaskCleanup" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_finished_task_cleanup"]
+[connection signal="pressed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/OpenModPrompt/Button" to="." method="_on_file_id_pressed" binds= [1]]
+[connection signal="tab_changed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" method="_on_tab_changed"]
+[connection signal="focus_entered" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_focus_entered"]
+[connection signal="focus_exited" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_focus_exited"]
+[connection signal="mouse_entered" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_mouse_exited"]
+[connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/CameraTimer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_camera_check"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_edit_id_pressed"]
+[connection signal="gui_input" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_gui_input"]
+[connection signal="text_changed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_text_changed"]
+[connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Timer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_timer_timeout"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_edit_id_pressed"]
+[connection signal="gui_input" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_gui_input"]
+[connection signal="text_changed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_text_changed"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" method="_on_edit_id_pressed"]
+[connection signal="item_activated" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Tree" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky" method="_on_tree_item_activated"]
+[connection signal="folding_changed" from="SplitContainer/VSplitMessages/MessageWindow" to="SplitContainer/VSplitMessages/MessageWindow" method="_on_folding_changed"]
+
+[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport/CameraController"]
+[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu"]
+[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu"]
+[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu"]

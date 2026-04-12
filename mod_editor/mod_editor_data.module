@@ -1,0 +1,10 @@
+[global]
+UIName = Mod Editor Data
+Description = Files for Mod Editor
+Playable = 0
+ModFolder = mod_editor_data
+ModVersion = 1.0
+RequireEngine = 0
+
+DataFolder.1 = Data
+

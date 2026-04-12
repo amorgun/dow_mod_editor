@@ -1,0 +1,12 @@
+font = 
+{
+	type 		= "FreeType2";
+	name 		= "Manrope";
+	file		= "Manrope[wght].ttf";
+	weight		= 500;
+
+	sizeDefault 	= 16;
+
+	spaceChar	= " ";
+	missingChar	= "?";
+}
