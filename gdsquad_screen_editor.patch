@@ -1,0 +1,198 @@
+diff --git a/safe_dict.gd b/safe_dict.gd
+index 19aeace..3ec26d2 100755
+--- a/safe_dict.gd
++++ b/safe_dict.gd
+@@ -74,5 +74,11 @@ func size() -> int:
+ func set_value(key: String, val: Variant) -> void:
+ 	_data[key] = val
+ 
++func erase(key: String) -> void:
++	_data.erase(key)
++
++func get_raw() -> Dictionary:
++	return _data
++
+ func duplicate(deep: bool = false) -> SafeDict:
+ 	return SafeDict.new(_data.duplicate(deep))
+
+diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
+index 44cf447..8903690 100755
+--- a/ui_screeen/ui_screeen.gd
++++ b/ui_screeen/ui_screeen.gd
+@@ -1,7 +1,10 @@
+ class_name UiScreen extends Control
+ 
++## Manual event routing: the top-most widget whose HitArea matches gets the event.
+ var is_interactive := true
+ 
++var _hover_widget: Widget = null
++
+ var mod: ModResourceLoader = null
+ var common_colors: Dictionary[String, Color] = {}
+ var common_styles: Dictionary[String, Dictionary] = {}
+@@ -82,6 +85,15 @@ class Widget extends Control:
+ 				c.visible = c.states & val
+ 			state = val
+ 	var hitbox: Control = null
++	## HitArea rectangles, as fractions of the widget rect.
++	var hit_rects: Array[Rect2] = []
++
++	func hit_test_global(point: Vector2) -> bool:
++		var rect := get_global_rect()
++		for hr in hit_rects:
++			if Rect2(rect.position + hr.position * rect.size, hr.size * rect.size).has_point(point):
++				return true
++		return false
+ 
+ 	static func _set_anchors(node: Control, pos: Vector2, size: Vector2) -> void:
+ 		node.anchor_left = pos.x
+@@ -109,26 +121,7 @@ class Widget extends Control:
+ 		add_child(children_root)
+ 		hitbox = Control.new()
+ 		hitbox.name = "HitBox"
+-		hitbox.mouse_entered.connect(func():
+-			if state != WIDGET_STATE.DISABLED:
+-				state = WIDGET_STATE.HOVER
+-			)
+-		hitbox.mouse_exited.connect(func():
+-			if state != WIDGET_STATE.DISABLED:
+-				state = WIDGET_STATE.NORMAL
+-		)
+-		hitbox.gui_input.connect(func(event: InputEvent):
+-			if state == WIDGET_STATE.DISABLED:
+-				return
+-			if event is InputEventMouseButton:
+-				if event.pressed:
+-					#print(get_global_rect().has_point(event.position))
+-					state = WIDGET_STATE.ACTIVE
+-				else:
+-					if state == WIDGET_STATE.ACTIVE:
+-						state = WIDGET_STATE.HOVER		
+-		)
+-		#mouse_filter = Control.MOUSE_FILTER_STOP
++		hitbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 
+ 	func _get_style_config_raw() -> Dictionary:
+ 		var style_id := config.get_array("style")
+@@ -151,26 +144,24 @@ class Widget extends Control:
+ 		#res.mouse_filter = Control.MOUSE_FILTER_PASS
+ 		match type:
+ 			"Graphic":
++				# empty node still added: art_root children stay index-aligned with the Art array
+ 				var img_path := config.get_str("texture")
+-				if img_path == "":
+-					return
+-				img_path = img_path.trim_prefix("generic:").trim_suffix(".tga")
+-				var image: Image = screen.mod.pload_image(img_path + ".rtx")
+-				if image == null:
+-					image = screen.mod.pload_image(img_path + ".dds")
+-				if image != null:
+-					image.decompress()
+-					image.flip_y()
+-				else:
+-					image = screen.mod.pload_image(img_path + ".tga")
+-				var node := TextureRect.new()	
+-				if image != null:
+-					node.texture = ImageTexture.create_from_image(image)
+-					node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+-					node.flip_v = config.get_bool("flipVertical")
+-					node.flip_h = config.get_bool("flipHorizontal")
+-				#else:
+-					#print("NO IMAGE FOUND FOR %s" % [img_path])
++				var node := TextureRect.new()
++				if img_path != "":
++					img_path = img_path.trim_prefix("generic:").trim_suffix(".tga")
++					var image: Image = screen.mod.pload_image(img_path + ".rtx")
++					if image == null:
++						image = screen.mod.pload_image(img_path + ".dds")
++					if image != null:
++						image.decompress()
++						image.flip_y()
++					else:
++						image = screen.mod.pload_image(img_path + ".tga")
++					if image != null:
++						node.texture = ImageTexture.create_from_image(image)
++						node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
++						node.flip_v = config.get_bool("flipVertical")
++						node.flip_h = config.get_bool("flipHorizontal")
+ 				res.add_child(node)
+ 			"Text":
+ 				var node := Label.new()
+@@ -274,9 +265,10 @@ class Widget extends Control:
+ 
+ 		_set_anchors(self, relative_pos, relative_size)
+ 
+-		var hitbox_config := effective_config.get_safe_array("HitArea")
+-		#if len(hitbox_config) >= 1:
+-			#_set_anchors(node.hitbox, hitbox_config[0].get_vec2("pos", Vector2.ZERO), hitbox_config[0].get_vec2("size", Vector2.ONE))
++		hit_rects.clear()
++		for c in effective_config.get_safe_array("HitArea"):
++			if c.get_str("type") == "Rectangle":
++				hit_rects.append(Rect2(c.get_vec2("position", Vector2.ZERO), c.get_vec2("size", Vector2.ONE)))
+ 		_set_anchors(hitbox, relative_pos, relative_size)
+ 	
+ 		var node_text := effective_config.get_str("text")
+@@ -420,6 +412,55 @@ class GraphicArt extends Art:
+ 			#_set_anchors(node, pos, size)
+ 			#root.add_child(node)
+ 
++## All widgets whose HitArea contains the global point, top-most first.
++func widgets_at(point: Vector2) -> Array[Widget]:
++	var res: Array[Widget] = []
++	for c in get_children():
++		if c is Widget:
++			_collect_hits(c, point, res)
++	res.reverse()
++	return res
++
++func _collect_hits(widget: Widget, point: Vector2, res: Array[Widget]) -> void:
++	if not widget.visible:
++		return
++	if widget.hit_test_global(point):
++		res.append(widget)
++	for slot_root in widget.slot_roots.values():
++		for type_root in slot_root.get_children():
++			for c in type_root.get_children():
++				if c is Widget:
++					_collect_hits(c, point, res)
++	for c in widget.children_root.get_children():
++		if c is Widget:
++			_collect_hits(c, point, res)
++
++func _set_hover(widget: Widget) -> void:
++	if _hover_widget == widget:
++		return
++	if is_instance_valid(_hover_widget) and _hover_widget.state != WIDGET_STATE.DISABLED:
++		_hover_widget.state = WIDGET_STATE.NORMAL
++	_hover_widget = widget
++	if widget != null and widget.state != WIDGET_STATE.DISABLED:
++		widget.state = WIDGET_STATE.HOVER
++
++func _gui_input(event: InputEvent) -> void:
++	if not is_interactive:
++		return
++	if event is InputEventMouseMotion:
++		var hits := widgets_at(get_global_mouse_position())
++		_set_hover(hits[0] if len(hits) else null)
++	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
++		if is_instance_valid(_hover_widget) and _hover_widget.state != WIDGET_STATE.DISABLED:
++			_hover_widget.state = WIDGET_STATE.ACTIVE if event.pressed else WIDGET_STATE.HOVER
++
++func _on_mouse_exited() -> void:
++	if is_interactive:
++		_set_hover(null)
++
++func _ready() -> void:
++	mouse_exited.connect(_on_mouse_exited)
++
+ func create_widget(parent: Widget = null) -> Widget:
+ 	var res := Widget.new()
+ 	res.screen = self
+@@ -442,7 +483,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+ 	for s in Slot:
+ 		var prev: Widget = null
+ 		if style_config.has(s):
+-			print(widget.full_name, style_config.get_dict(s))
+ 			var c := build_widget_from_config(style_config.get_dict(s), widget)
+ 			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
+ 			prev = c
