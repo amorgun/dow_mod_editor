@@ -82,6 +82,7 @@ func setup_content(content: String, loader: ModResourceLoader) -> void:
 	selection.visible = false
 	item_selection.visible = false
 	selected_widget = null
+	widget_props.reset_style_cache()
 	widget_props.set_widget(null, true)
 	undo_redo.clear_history()
 	_pick_stack = []
@@ -192,6 +193,9 @@ func _on_select_widget(widget: UiScreen.Widget) -> void:
 	selection.visible = widget_props.current_tab == 0
 	item_selection.visible = false
 
+	if widget == selected_widget:
+		# gizmo refreshed above; the prop panel refreshes via the update signal
+		return
 	if selected_widget != null and selected_widget.is_connected("update", widget_props.sync_display):
 		selected_widget.disconnect("update", widget_props.sync_display)
 	selected_widget = widget
@@ -222,6 +226,9 @@ func _on_widget_selection_edit_ended() -> void:
 	var parent_scale: Vector2 = widget._get_parent_scale()
 	var new_pos := widget.relative_pos * parent_scale
 	var new_size := widget.relative_size * parent_scale
+	var eff := widget.get_effective_config()
+	if new_pos.is_equal_approx(eff.get_vec2("position", Vector2.ZERO)) and new_size.is_equal_approx(eff.get_vec2("size", Vector2.ONE)):
+		return
 	var raw := widget.config.get_raw()
 	var had_pos: bool = "position" in raw
 	var had_size: bool = "size" in raw
@@ -469,17 +476,12 @@ func _select_row(widget: UiScreen.Widget) -> void:
 func _on_mode_selected(index: int) -> void:
 	ui_screen.is_interactive = index == ViewMode.INTERACTIVE
 	_pick_stack = []
-	# picker mode: gizmos become click-through so re-clicks over the selection
-	# outline can cycle the pick stack; manipulation happens in Interactive mode
-	var pick := index == ViewMode.PICKER
-	for gizmo in [selection, item_selection]:
-		gizmo.mouse_filter = Control.MOUSE_FILTER_IGNORE if pick else Control.MOUSE_FILTER_STOP
-		gizmo.get_node("ReferenceRect").mouse_filter = Control.MOUSE_FILTER_IGNORE if pick else Control.MOUSE_FILTER_PASS
 
+## Picking is on the right button: the left button belongs to the gizmo.
 func _on_canvas_gui_input(event: InputEvent) -> void:
 	if mode_option.selected != ViewMode.PICKER:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		var hits := ui_screen.widgets_at(ui_screen.get_global_mouse_position())
 		if hits == _pick_stack and len(hits) > 0:
 			_pick_index = (_pick_index + 1) % len(hits)
@@ -540,6 +542,9 @@ func _on_item_selection_edit_ended() -> void:
 	var rect := item_selection.get_global_rect()
 	var new_pos := (rect.position - widget_rect.position) / widget_rect.size
 	var new_size := rect.size / widget_rect.size
+	var item_config := SafeDict.new(item)
+	if new_pos.is_equal_approx(item_config.get_vec2("position", Vector2.ZERO)) and new_size.is_equal_approx(item_config.get_vec2("size", Vector2.ONE)):
+		return
 	var had_pos: bool = "position" in item
 	var had_size: bool = "size" in item
 	var old_pos = item.get("position")

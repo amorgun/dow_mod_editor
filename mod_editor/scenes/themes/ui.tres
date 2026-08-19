@@ -1,4 +1,11 @@
-[gd_resource type="Theme" format=3 uid="uid://b2ocuhxe1s4di"]
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://b2ocuhxe1s4di"]
+
+[ext_resource type="Texture2D" path="res://mod_editor/icons/Checked.svg" id="1_chk"]
+[ext_resource type="Texture2D" path="res://mod_editor/icons/Unchecked.svg" id="2_unchk"]
 
 [resource]
 default_font_size = 14
+CheckBox/icons/checked = ExtResource("1_chk")
+CheckBox/icons/checked_disabled = ExtResource("1_chk")
+CheckBox/icons/unchecked = ExtResource("2_unchk")
+CheckBox/icons/unchecked_disabled = ExtResource("2_unchk")

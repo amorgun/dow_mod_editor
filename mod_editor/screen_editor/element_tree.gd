@@ -15,10 +15,10 @@ var undo_redo: UndoRedo = null
 var _name_before := ""
 var _menu: PopupMenu
 
-var _icon_visible: Image = Settings.data.pload_image("data:art/ui/textures/GuiVisibilityVisible.svg")
-var _icon_hidden: Image = Settings.data.pload_image("data:art/ui/textures/GuiVisibilityHidden.svg")
-var _icon_widget: Image = Settings.data.pload_image("data:art/ui/textures/Widget.svg")
-var _icon_widget_slot: Image = Settings.data.pload_image("data:art/ui/textures/WidgetSlot.svg")
+var _icon_visible: ImageTexture = ImageTexture.create_from_image(Settings.data.pload_image("data:art/ui/textures/GuiVisibilityVisible.svg"))
+var _icon_hidden: ImageTexture = ImageTexture.create_from_image(Settings.data.pload_image("data:art/ui/textures/GuiVisibilityHidden.svg"))
+var _icon_widget: ImageTexture = ImageTexture.create_from_image(Settings.data.pload_image("data:art/ui/textures/Widget.svg"))
+var _icon_widget_slot: ImageTexture = ImageTexture.create_from_image(Settings.data.pload_image("data:art/ui/textures/WidgetSlot.svg"))
 
 
 func _ready() -> void:
@@ -36,7 +36,7 @@ func create_widget_node(widget: UiScreen.Widget, root: TreeItem, slot: int = -1,
 	it.set_meta("widget", widget)
 	it.set_meta("slot", slot)
 	it.set_meta("style_owned", style_owned)
-	it.add_button(1, ImageTexture.create_from_image(_icon_visible), -1, false, "Toggle Visibility")
+	it.add_button(1, _icon_visible, -1, false, "Toggle Visibility")
 	sync_item(it)
 	return it
 
@@ -52,12 +52,9 @@ func _is_style_owned(item: TreeItem) -> bool:
 func sync_item(item: TreeItem) -> void:
 	var widget := _get_widget(item)
 	item.set_text(0, widget.full_name)
-	item.set_icon(0, ImageTexture.create_from_image(_icon_widget_slot if _is_slotted(item) else _icon_widget))
+	item.set_icon(0, _icon_widget_slot if _is_slotted(item) else _icon_widget)
 	item.set_meta("visible", widget.visible)
-	if widget.visible:
-		item.set_button(1, 0, ImageTexture.create_from_image(_icon_visible))
-	else:
-		item.set_button(1, 0, ImageTexture.create_from_image(_icon_hidden))
+	item.set_button(1, 0, _icon_visible if widget.visible else _icon_hidden)
 
 func find_item(widget: UiScreen.Widget, from: TreeItem = get_root()) -> TreeItem:
 	if from == null:

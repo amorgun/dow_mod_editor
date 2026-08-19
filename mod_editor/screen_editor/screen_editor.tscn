@@ -1,0 +1,172 @@
+[gd_scene format=3 uid="uid://dabqk5nitw3dt"]
+
+[ext_resource type="Script" uid="uid://cb3621aa3yjbr" path="res://mod_editor/screen_editor/screen_editor.gd" id="1_b0wfi"]
+[ext_resource type="Script" uid="uid://ddq4wl3v4vvij" path="res://mod_editor/screen_editor/element_tree.gd" id="2_jyeg0"]
+[ext_resource type="PackedScene" uid="uid://4i6xby07543s" path="res://addons/gdsquad/ui_screeen/ui_screeen.tscn" id="2_kcmre"]
+[ext_resource type="PackedScene" uid="uid://b81y6pwvpq1w4" path="res://mod_editor/screen_editor/resize_control.tscn" id="4_wpf1w"]
+[ext_resource type="Script" uid="uid://bxc5d7bvsexd8" path="res://mod_editor/screen_editor/widget_props.gd" id="5_1uylo"]
+[ext_resource type="Script" path="res://mod_editor/screen_editor/item_list_tab.gd" id="6_itemt"]
+
+[node name="ScreenEditor" type="Panel" unique_id=2138810329]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_b0wfi")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=859113931]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="HBoxContainer" parent="VBoxContainer" unique_id=1342771005]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="VBoxContainer/TopBar" unique_id=1643651077]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Back to Mod Editor"
+
+[node name="ModeLabel" type="Label" parent="VBoxContainer/TopBar" unique_id=1342771006]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Mode"
+
+[node name="Mode" type="OptionButton" parent="VBoxContainer/TopBar" unique_id=1342771007]
+layout_mode = 2
+size_flags_horizontal = 8
+item_count = 2
+selected = 0
+popup/item_0/text = "Interactive"
+popup/item_0/id = 0
+popup/item_1/text = "Element Picker"
+popup/item_1/id = 1
+
+[node name="Columns" type="HSplitContainer" parent="VBoxContainer" unique_id=1228049648]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offsets = PackedInt32Array(-177, 262)
+split_offset = -177
+
+[node name="ElementTree" type="Tree" parent="VBoxContainer/Columns" unique_id=1462519143]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+columns = 2
+hide_root = true
+auto_tooltip = false
+script = ExtResource("2_jyeg0")
+
+[node name="Preview" type="Panel" parent="VBoxContainer/Columns" unique_id=1142016619]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UiScreeen" parent="VBoxContainer/Columns/Preview" unique_id=1960177141 instance=ExtResource("2_kcmre")]
+layout_mode = 1
+mouse_filter = 1
+
+[node name="WidgetSelection" parent="VBoxContainer/Columns/Preview" unique_id=1919164788 instance=ExtResource("4_wpf1w")]
+visible = false
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="ReferenceRect" type="ReferenceRect" parent="VBoxContainer/Columns/Preview/WidgetSelection" unique_id=1114269453]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+border_color = Color(0.7973681, 0.3598562, 0.19433784, 1)
+border_width = 3.0
+editor_only = false
+
+[node name="ItemSelection" parent="VBoxContainer/Columns/Preview" unique_id=1919164789 instance=ExtResource("4_wpf1w")]
+visible = false
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="ReferenceRect" type="ReferenceRect" parent="VBoxContainer/Columns/Preview/ItemSelection" unique_id=1114269454]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+border_color = Color(0.2, 0.55, 0.9, 1)
+border_width = 3.0
+editor_only = false
+
+[node name="Sidebar" type="TabContainer" parent="VBoxContainer/Columns" unique_id=1618653099]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+current_tab = 0
+script = ExtResource("5_1uylo")
+
+[node name="Properties" type="ScrollContainer" parent="VBoxContainer/Columns/Sidebar" unique_id=453316906]
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 0
+
+[node name="Rows" type="VBoxContainer" parent="VBoxContainer/Columns/Sidebar/Properties" unique_id=305812496]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Art" type="VBoxContainer" parent="VBoxContainer/Columns/Sidebar" unique_id=1922082644]
+visible = false
+layout_mode = 2
+script = ExtResource("6_itemt")
+metadata/_tab_index = 1
+
+[node name="HitArea" type="VBoxContainer" parent="VBoxContainer/Columns/Sidebar" unique_id=1269334481]
+visible = false
+layout_mode = 2
+script = ExtResource("6_itemt")
+kind = 1
+metadata/_tab_index = 2
+
+[connection signal="pressed" from="VBoxContainer/TopBar/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="item_selected" from="VBoxContainer/TopBar/Mode" to="." method="_on_mode_selected"]
+[connection signal="button_clicked" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_button_clicked"]
+[connection signal="item_activated" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_activated"]
+[connection signal="item_edited" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_edited"]
+[connection signal="item_selected" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_selected"]
+[connection signal="select_widget" from="VBoxContainer/Columns/ElementTree" to="." method="_on_select_widget"]
+[connection signal="copy_requested" from="VBoxContainer/Columns/ElementTree" to="." method="_on_copy_widget"]
+[connection signal="paste_requested" from="VBoxContainer/Columns/ElementTree" to="." method="_on_paste_widget"]
+[connection signal="delete_requested" from="VBoxContainer/Columns/ElementTree" to="." method="_on_delete_widget"]
+[connection signal="gui_input" from="VBoxContainer/Columns/Preview" to="." method="_on_canvas_gui_input"]
+[connection signal="drag_ended" from="VBoxContainer/Columns/Preview/WidgetSelection" to="." method="_on_widget_selection_edit_ended"]
+[connection signal="interactive_dragged" from="VBoxContainer/Columns/Preview/WidgetSelection" to="." method="_on_widget_select_update"]
+[connection signal="interactive_resized" from="VBoxContainer/Columns/Preview/WidgetSelection" to="." method="_on_widget_select_update"]
+[connection signal="resize_ended" from="VBoxContainer/Columns/Preview/WidgetSelection" to="." method="_on_widget_selection_edit_ended"]
+[connection signal="drag_ended" from="VBoxContainer/Columns/Preview/ItemSelection" to="." method="_on_item_selection_edit_ended"]
+[connection signal="resize_ended" from="VBoxContainer/Columns/Preview/ItemSelection" to="." method="_on_item_selection_edit_ended"]
+[connection signal="tab_changed" from="VBoxContainer/Columns/Sidebar" to="." method="_on_sidebar_tab_changed"]
+[connection signal="prop_changed" from="VBoxContainer/Columns/Sidebar" to="." method="_on_prop_changed"]
+[connection signal="prop_removed" from="VBoxContainer/Columns/Sidebar" to="." method="_on_prop_removed"]
+[connection signal="style_selected" from="VBoxContainer/Columns/Sidebar" to="." method="_on_style_selected"]
+[connection signal="slot_selected" from="VBoxContainer/Columns/Sidebar" to="." method="_on_slot_selected"]

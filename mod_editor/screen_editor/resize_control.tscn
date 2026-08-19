@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://b81y6pwvpq1w4"]
+
+[ext_resource type="Script" uid="uid://dnerx7e0wnr5a" path="res://mod_editor/screen_editor/resize_control.gd" id="1_ly7t2"]
+
+[node name="Selection" type="Control" unique_id=998766618]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_ly7t2")
+min_window_size = Vector2(10, 10)
