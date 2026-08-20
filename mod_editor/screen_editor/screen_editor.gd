@@ -3,7 +3,6 @@ class_name ScreenEditor extends Panel
 enum ViewMode {
 	INTERACTIVE,
 	PICKER,
-	NAVIGATE,
 }
 
 @onready var pan_zoom: PanZoomView = $VBoxContainer/Columns/Preview/PanZoom
@@ -54,6 +53,7 @@ func _ready() -> void:
 			_view_ratios.append(SafeDict.new(item))
 			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
 	view_ratio_option.add_item("Responsive")
+	ui_screen.default_ratio = view_config.get_value("aspect_ratio", 4.0 / 3, TYPE_FLOAT)
 	snap_step_spin.value = view_config.get_value("snap_step", 8.0, TYPE_FLOAT)
 	guide_lines.grab_margin = view_config.get_value("guide_grab_margin", 4.0, TYPE_FLOAT)
 	widget_select_rect.border_color = _config_color(view_config, "color_widget_select", Color(0.797, 0.36, 0.194))
@@ -557,7 +557,6 @@ func _select_row(widget: UiScreen.Widget) -> void:
 
 func _on_mode_selected(index: int) -> void:
 	ui_screen.is_interactive = index == ViewMode.INTERACTIVE
-	pan_zoom.enabled = index == ViewMode.NAVIGATE
 	_pick_stack = []
 
 func _on_reset_view_pressed() -> void:

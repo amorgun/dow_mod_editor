@@ -67,7 +67,10 @@ func add_mod(path: String) -> ModSet:
 
 func _load_mod(mod_info: ModInfo, path: String, node: TreeItem) -> bool:
 	_clear_tree(node)
-	var err := mod_info.mod.load(path, Settings.extra_lookup_folders)
+	var expanded_folders: PackedStringArray = []
+	for folder in Settings.extra_lookup_folders:
+		expanded_folders.append(Settings.expand_path(folder))
+	var err := mod_info.mod.load(path, expanded_folders)
 	if err != OK:
 		node.set_meta("error", true)
 		_updating_items[node] = true

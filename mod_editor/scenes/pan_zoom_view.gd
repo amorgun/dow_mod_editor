@@ -1,16 +1,9 @@
-## Wheel-zoom and drag-pan over the children (attached under $SubViewport).
-## Enabled: this control captures all mouse input and the children get none;
-## disabled: the children are interactive again and the view transform stays.
+## Wheel-zoom and middle-mouse drag-pan over the children (attached under
+## $SubViewport); always active, other buttons reach the children normally.
 class_name PanZoomView extends SubViewportContainer
 
 const MIN_ZOOM := 0.1
 const MAX_ZOOM := 16.0
-
-var enabled := false:
-	set(val):
-		enabled = val
-		if is_node_ready():
-			viewport.gui_disable_input = val
 
 ## When > 0, the viewport renders 2D content at this constant pixel height
 ## (size_2d_override) and stretches to fit, so authored font and pixel sizes
@@ -28,7 +21,6 @@ var _offset := Vector2.ZERO
 var _dragging := false
 
 func _ready() -> void:
-	viewport.gui_disable_input = enabled
 	_apply_override()
 
 func _notification(what: int) -> void:
@@ -64,10 +56,8 @@ func _zoom_at(point: Vector2, factor: float) -> void:
 	_apply()
 
 func _gui_input(event: InputEvent) -> void:
-	if not enabled:
-		return
 	if event is InputEventMouseButton:
-		if event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_MIDDLE]:
+		if event.button_index == MOUSE_BUTTON_MIDDLE:
 			_dragging = event.pressed
 			accept_event()
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -77,6 +67,9 @@ func _gui_input(event: InputEvent) -> void:
 			_zoom_at(_to_canvas(event.position), 1 / 1.2)
 			accept_event()
 	elif event is InputEventMouseMotion and _dragging:
+		if not (event.button_mask & MOUSE_BUTTON_MASK_MIDDLE):
+			_dragging = false
+			return
 		_offset += _to_canvas(event.relative)
 		_apply()
 		accept_event()

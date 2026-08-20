@@ -9,10 +9,6 @@ enum EditCommands {
 	RESET_VIEW = 1,
 }
 
-func _ready() -> void:
-	# an image has no interactive children: navigation is always on
-	$PanZoom.enabled = true
-
 var layer_images: Dictionary[int, ImageTexture] = {}
 
 func _on_edit_id_pressed(id: int) -> void:

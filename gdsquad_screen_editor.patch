@@ -103,6 +103,19 @@ index 532d3a9..1a46d17 100755
 +		root.tooltip_widget = root.build_widget_from_config(screen_config.get_dict("TooltipWidgets"))
 +		root.widget_root.add_child(root.tooltip_widget)
 +		root.widget_root.add_child(root.tooltip_widget.hitbox)
+diff --git a/mod_set.gd b/mod_set.gd
+index 88c0ec2..e4965be 100755
+--- a/mod_set.gd
++++ b/mod_set.gd
+@@ -241,7 +241,7 @@ func load(
+ 	var available_modules: Dictionary[String, String] = {}
+ 	var modules_dirs: PackedStringArray = [path.get_base_dir()]
+ 	for p in extra_lookup_folders:
+-		modules_dirs.append(Settings.expand_path(p))
++		modules_dirs.append(p)
+ 	for modules_dir_path in modules_dirs:
+ 		var modules_dir := DirAccess.open(modules_dir_path)
+ 		if modules_dir == null:
 diff --git a/safe_dict.gd b/safe_dict.gd
 index 19aeace..3ec26d2 100755
 --- a/safe_dict.gd
@@ -260,10 +273,10 @@ index 0000000..a37e305
 +grow_vertical = 2
 +mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..8560536 100755
+index 44cf447..92fa03f 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
-@@ -1,7 +1,23 @@
+@@ -1,7 +1,24 @@
  class_name UiScreen extends Control
  
 +## Manual event routing: the top-most widget whose HitArea matches gets the event.
@@ -280,14 +293,15 @@ index 44cf447..8560536 100755
 +var widget_root: Control:
 +	get: return $RatioToggle.content_root
 +
-+static var _default_ratio := 0.0
++## Fallback display ratio for fixed mode when the screen data declares none.
++var default_ratio := 4.0 / 3
 +
 +var _hover_widget: Widget = null
 +
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -82,6 +98,15 @@ class Widget extends Control:
+@@ -82,6 +99,15 @@ class Widget extends Control:
  				c.visible = c.states & val
  			state = val
  	var hitbox: Control = null
@@ -303,7 +317,7 @@ index 44cf447..8560536 100755
  
  	static func _set_anchors(node: Control, pos: Vector2, size: Vector2) -> void:
  		node.anchor_left = pos.x
-@@ -109,26 +134,7 @@ class Widget extends Control:
+@@ -109,26 +135,7 @@ class Widget extends Control:
  		add_child(children_root)
  		hitbox = Control.new()
  		hitbox.name = "HitBox"
@@ -331,7 +345,7 @@ index 44cf447..8560536 100755
  
  	func _get_style_config_raw() -> Dictionary:
  		var style_id := config.get_array("style")
-@@ -151,26 +157,24 @@ class Widget extends Control:
+@@ -151,26 +158,24 @@ class Widget extends Control:
  		#res.mouse_filter = Control.MOUSE_FILTER_PASS
  		match type:
  			"Graphic":
@@ -375,7 +389,7 @@ index 44cf447..8560536 100755
  				res.add_child(node)
  			"Text":
  				var node := Label.new()
-@@ -234,6 +238,7 @@ class Widget extends Control:
+@@ -234,6 +239,7 @@ class Widget extends Control:
  				res.add_child(node)
  		for c in res.get_children():
  			c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -383,7 +397,7 @@ index 44cf447..8560536 100755
  		for s in config.get_array("states"):
  			res.states |= {
  				"Normal": UiScreen.WIDGET_STATE.NORMAL,
-@@ -274,9 +279,10 @@ class Widget extends Control:
+@@ -274,9 +280,10 @@ class Widget extends Control:
  
  		_set_anchors(self, relative_pos, relative_size)
  
@@ -397,7 +411,7 @@ index 44cf447..8560536 100755
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
  		var node_text := effective_config.get_str("text")
-@@ -288,6 +294,8 @@ class Widget extends Control:
+@@ -288,6 +295,8 @@ class Widget extends Control:
  		var presentation := effective_config.get_dict("Presentation")
  		for c in presentation.get_safe_array("Art"):
  			_add_art_item(c, node_text)
@@ -406,7 +420,7 @@ index 44cf447..8560536 100755
  
  	func get_widget_slot(slot: Slot, type: SlotType) -> Widget:
  		var root := slot_roots[slot].get_child(type)
-@@ -306,9 +314,6 @@ class Widget extends Control:
+@@ -306,9 +315,6 @@ class Widget extends Control:
  class Art extends Control:
  	var states: WIDGET_STATE = 0
  
@@ -416,16 +430,14 @@ index 44cf447..8560536 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +425,78 @@ class GraphicArt extends Art:
+@@ -420,8 +426,76 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
-+## Fixed keeps the screen's ratio (data value, else the editor-data config
-+## default) with visible overflow; responsive fills the parent.
++## Fixed keeps the screen's ratio (data value, else default_ratio assigned by
++## the embedding editor) with visible overflow; responsive fills the parent.
 +func set_fixed_ratio(fixed: bool) -> void:
-+	if _default_ratio == 0.0:
-+		_default_ratio = Settings.data.pload_lua("data:screen_editor.lua").get_value("aspect_ratio", 4.0 / 3, TYPE_FLOAT)
-+	$RatioToggle.ratio = aspect_ratio if aspect_ratio > 0 else _default_ratio
++	$RatioToggle.ratio = aspect_ratio if aspect_ratio > 0 else default_ratio
 +	$RatioToggle.fixed = fixed
 +
 +## All widgets whose HitArea contains the global point, top-most first.
@@ -495,7 +507,7 @@ index 44cf447..8560536 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +505,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +504,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -504,7 +516,7 @@ index 44cf447..8560536 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +517,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +516,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -512,7 +524,7 @@ index 44cf447..8560536 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +525,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +524,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false
