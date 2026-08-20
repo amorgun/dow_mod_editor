@@ -1,8 +1,8 @@
 diff --git a/formats/screen.gd b/formats/screen.gd
-index 532d3a9..7a3a264 100755
+index 532d3a9..1a46d17 100755
 --- a/formats/screen.gd
 +++ b/formats/screen.gd
-@@ -1,7 +1,11 @@
+@@ -1,7 +1,12 @@
  class_name ScreenParser
  
 +const SCREEN_VERSION := 4
@@ -11,18 +11,21 @@ index 532d3a9..7a3a264 100755
  var config_root: Lua = null
  var parse_error = ""
 +var aspect_ratio := 0.0
++var guides: Array = []
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -54,6 +58,7 @@ func load(text: String) -> bool:
+@@ -54,7 +59,9 @@ func load(text: String) -> bool:
  	if config_root.dostring(text) != Error.OK:
  		parse_error = config_root.get_error()
  		return false
 +	aspect_ratio = SafeDict.new(config_root.get_value("Screen", {}, TYPE_DICTIONARY)).get_typed("AspectRatio", 0.0, TYPE_FLOAT)
  	var info_root: Dictionary = config_root.get_value("ToolInfo", {}, TYPE_DICTIONARY)
++	guides = SafeDict.new(info_root).get_array("Guides")
  	var info_config := SafeDict.new(info_root)
  	var widget_info_config := info_config.get_safe_array("WidgetInfo")
-@@ -62,6 +67,58 @@ func load(text: String) -> bool:
+ 	widgets_info.clear()
+@@ -62,6 +69,58 @@ func load(text: String) -> bool:
  		widgets_info[i.get_str("name")] = i
  	return true
  
@@ -32,7 +35,7 @@ index 532d3a9..7a3a264 100755
 +	var infos: Array = []
 +	for info in view.widgets_info.values():
 +		infos.append(info.get_raw())
-+	return _serialize(view.main_widget.config.get_raw(), tooltips, view.aspect_ratio, infos)
++	return _serialize(view.main_widget.config.get_raw(), tooltips, view.aspect_ratio, infos, view.guides)
 +
 +## Serialize straight from freshly parsed data (round-trip checks).
 +func serialize_parsed() -> String:
@@ -41,11 +44,11 @@ index 532d3a9..7a3a264 100755
 +	var infos: Array = []
 +	for info in widgets_info.values():
 +		infos.append(info.get_raw())
-+	return _serialize(screen_config.get_dict("Widgets").get_raw(), tooltips, aspect_ratio, infos)
++	return _serialize(screen_config.get_dict("Widgets").get_raw(), tooltips, aspect_ratio, infos, guides)
 +
-+## Every section is derived from the data: versions are constants, Guides is
-+## empty, LocaleRange is the min/max of the $id translated-text references.
-+static func _serialize(widgets: Dictionary, tooltips: Variant, aspect: float, infos: Array) -> String:
++## Every section is derived from the data: versions are constants, LocaleRange
++## is the min/max of the $id translated-text references.
++static func _serialize(widgets: Dictionary, tooltips: Variant, aspect: float, infos: Array, guides_: Array) -> String:
 +	var screen := {}
 +	if aspect > 0:
 +		screen["AspectRatio"] = aspect
@@ -60,7 +63,7 @@ index 532d3a9..7a3a264 100755
 +		"ToolInfo": {
 +			"version": TOOLINFO_VERSION,
 +			"WidgetInfo": infos,
-+			"Guides": [],
++			"Guides": guides_,
 +			"ScreenInfo": {"LocaleRange": [ids.min(), ids.max()] if not ids.is_empty() else []},
 +		},
 +	}
@@ -81,7 +84,7 @@ index 532d3a9..7a3a264 100755
  func setup_view(root: UiScreen) -> void:
  	root.mod = mod
  	root.common_colors = common_colors
-@@ -71,8 +128,13 @@ func setup_view(root: UiScreen) -> void:
+@@ -71,8 +130,14 @@ func setup_view(root: UiScreen) -> void:
  	
  	var screen_root: Dictionary = config_root.get_value("Screen", {}, TYPE_DICTIONARY)
  	var screen_config := SafeDict.new(screen_root)
@@ -91,6 +94,7 @@ index 532d3a9..7a3a264 100755
 -	root.add_child(widgets_root)
 -	root.add_child(widgets_root.hitbox)
 +	root.aspect_ratio = aspect_ratio
++	root.guides = guides
 +	root.main_widget = root.build_widget_from_config(screen_config.get_dict("Widgets"))
 +	root.widget_root.add_child(root.main_widget)
 +	root.widget_root.add_child(root.main_widget.hitbox)
@@ -256,10 +260,10 @@ index 0000000..a37e305
 +grow_vertical = 2
 +mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..da458a3 100755
+index 44cf447..b2ae33b 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
-@@ -1,7 +1,21 @@
+@@ -1,7 +1,23 @@
  class_name UiScreen extends Control
  
 +## Manual event routing: the top-most widget whose HitArea matches gets the event.
@@ -270,6 +274,8 @@ index 44cf447..da458a3 100755
 +## The two editable roots of the document: Screen.Widgets and TooltipWidgets.
 +var main_widget: Widget = null
 +var tooltip_widget: Widget = null
++## Screen-level ruler guides: {horizontal: bool, position: float} dicts.
++var guides: Array = []
 +## Widgets mount here: $RatioToggle's active root (fixed-ratio or responsive).
 +var widget_root: Control:
 +	get: return $RatioToggle.content_root
@@ -281,7 +287,7 @@ index 44cf447..da458a3 100755
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -82,6 +96,15 @@ class Widget extends Control:
+@@ -82,6 +98,15 @@ class Widget extends Control:
  				c.visible = c.states & val
  			state = val
  	var hitbox: Control = null
@@ -297,7 +303,7 @@ index 44cf447..da458a3 100755
  
  	static func _set_anchors(node: Control, pos: Vector2, size: Vector2) -> void:
  		node.anchor_left = pos.x
-@@ -109,26 +132,7 @@ class Widget extends Control:
+@@ -109,26 +134,7 @@ class Widget extends Control:
  		add_child(children_root)
  		hitbox = Control.new()
  		hitbox.name = "HitBox"
@@ -325,7 +331,7 @@ index 44cf447..da458a3 100755
  
  	func _get_style_config_raw() -> Dictionary:
  		var style_id := config.get_array("style")
-@@ -151,26 +155,24 @@ class Widget extends Control:
+@@ -151,26 +157,24 @@ class Widget extends Control:
  		#res.mouse_filter = Control.MOUSE_FILTER_PASS
  		match type:
  			"Graphic":
@@ -369,7 +375,7 @@ index 44cf447..da458a3 100755
  				res.add_child(node)
  			"Text":
  				var node := Label.new()
-@@ -234,6 +236,7 @@ class Widget extends Control:
+@@ -234,6 +238,7 @@ class Widget extends Control:
  				res.add_child(node)
  		for c in res.get_children():
  			c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -377,7 +383,7 @@ index 44cf447..da458a3 100755
  		for s in config.get_array("states"):
  			res.states |= {
  				"Normal": UiScreen.WIDGET_STATE.NORMAL,
-@@ -274,9 +277,10 @@ class Widget extends Control:
+@@ -274,9 +279,10 @@ class Widget extends Control:
  
  		_set_anchors(self, relative_pos, relative_size)
  
@@ -391,7 +397,7 @@ index 44cf447..da458a3 100755
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
  		var node_text := effective_config.get_str("text")
-@@ -288,6 +292,8 @@ class Widget extends Control:
+@@ -288,6 +294,8 @@ class Widget extends Control:
  		var presentation := effective_config.get_dict("Presentation")
  		for c in presentation.get_safe_array("Art"):
  			_add_art_item(c, node_text)
@@ -400,7 +406,7 @@ index 44cf447..da458a3 100755
  
  	func get_widget_slot(slot: Slot, type: SlotType) -> Widget:
  		var root := slot_roots[slot].get_child(type)
-@@ -306,9 +312,6 @@ class Widget extends Control:
+@@ -306,9 +314,6 @@ class Widget extends Control:
  class Art extends Control:
  	var states: WIDGET_STATE = 0
  
@@ -410,7 +416,7 @@ index 44cf447..da458a3 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +423,73 @@ class GraphicArt extends Art:
+@@ -420,8 +425,73 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
@@ -484,7 +490,7 @@ index 44cf447..da458a3 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +498,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +500,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -493,7 +499,7 @@ index 44cf447..da458a3 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +510,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +512,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -501,7 +507,7 @@ index 44cf447..da458a3 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +518,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +520,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false

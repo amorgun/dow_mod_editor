@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://mod_editor/screen_editor/item_list_tab.gd" id="6_itemt"]
 [ext_resource type="PackedScene" path="res://mod_editor/scenes/pan_zoom_view.tscn" id="7_pnzm"]
 [ext_resource type="PackedScene" path="res://addons/gdsquad/togglable_aspect_ratio_container.tscn" id="8_tarc"]
+[ext_resource type="Script" path="res://mod_editor/screen_editor/guide_lines.gd" id="9_gdln"]
 
 [node name="ScreenEditor" type="Panel" unique_id=2138810329]
 anchors_preset = 15
@@ -115,6 +116,16 @@ mouse_filter = 2
 layout_mode = 1
 mouse_filter = 1
 
+[node name="GuideLines" type="Control" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas" unique_id=1919164787]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_gdln")
+
 [node name="WidgetSelection" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas" unique_id=1919164788 instance=ExtResource("4_wpf1w")]
 visible = false
 layout_mode = 1
@@ -191,6 +202,13 @@ layout_mode = 2
 script = ExtResource("6_itemt")
 kind = 1
 metadata/_tab_index = 2
+
+[node name="Guides" type="VBoxContainer" parent="VBoxContainer/Columns/Sidebar" unique_id=1269334482]
+visible = false
+layout_mode = 2
+script = ExtResource("6_itemt")
+kind = 2
+metadata/_tab_index = 3
 
 [connection signal="pressed" from="VBoxContainer/TopBar/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="item_selected" from="VBoxContainer/TopBar/Mode" to="." method="_on_mode_selected"]

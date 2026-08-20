@@ -224,6 +224,19 @@ static func item_template(type: String) -> Dictionary:
 		"Triangle": return {"type": "Triangle", "position": [0.0, 0.0], "size": [1.0, 1.0], "p1": [0.0, 0.0], "p2": [1.0, 0.0], "p3": [0.5, 1.0], "colour": [255, 255, 255, 255], "states": ["Normal", "Hover", "Active", "Disabled"]}
 		"Rectangle", _: return {"type": "Rectangle", "position": [0.0, 0.0], "size": [1.0, 1.0], "colour": [255, 255, 255, 255], "states": ["Normal", "Hover", "Active", "Disabled"]}
 
+const GUIDE_TYPES: Array[String] = ["Guide"]
+
+const GUIDE_PROPS: Array[Dictionary] = [
+	{"key": "horizontal", "kind": Kind.BOOL},
+	{"key": "position", "kind": Kind.NUMBER},
+]
+
+static func guide_props(_type: String) -> Array[Dictionary]:
+	return GUIDE_PROPS
+
+static func guide_template(_type: String) -> Dictionary:
+	return {"horizontal": true, "position": 0.5}
+
 static func hit_template(type: String) -> Dictionary:
 	match type:
 		"Triangle": return {"type": "Triangle", "p1": [0.0, 0.0], "p2": [1.0, 0.0], "p3": [0.5, 1.0]}

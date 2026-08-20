@@ -13,6 +13,7 @@ enum ViewMode {
 @onready var selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection
 @onready var item_selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection
 @onready var view_ratio_option: OptionButton = $VBoxContainer/TopBar/ViewRatio
+@onready var guide_lines: GuideLines = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/GuideLines
 @onready var widget_props: WidgetProps = $VBoxContainer/Columns/Sidebar
 @onready var mode_option: OptionButton = $VBoxContainer/TopBar/Mode
 
@@ -43,7 +44,7 @@ func _ready() -> void:
 			_view_ratios.append(SafeDict.new(item))
 			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
 	view_ratio_option.add_item("Responsive")
-	for tab in [widget_props.art_tab, widget_props.hit_tab]:
+	for tab in [widget_props.art_tab, widget_props.hit_tab, widget_props.guides_tab]:
 		tab.item_selected.connect(_on_item_selected.bind(tab))
 		tab.item_prop_changed.connect(_on_item_prop_changed.bind(tab))
 		tab.item_prop_removed.connect(_on_item_prop_removed.bind(tab))
@@ -72,7 +73,7 @@ func _input(event: InputEvent) -> void:
 		undo_redo.undo()
 	elif event.is_action_pressed("ui_redo", false, true):
 		undo_redo.redo()
-	elif _current_item_tab() != null and selected_widget != null and get_viewport().gui_get_focus_owner() is not LineEdit:
+	elif _current_item_tab() != null and (selected_widget != null or _current_item_tab().kind == ItemListTab.ItemKind.GUIDES) and get_viewport().gui_get_focus_owner() is not LineEdit:
 		# the active sidebar tab decides the copy/paste/delete context
 		var tab := _current_item_tab()
 		var index := tab.selected_index()
@@ -104,6 +105,10 @@ func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo
 	PropRow.set_palette(ui_screen.common_colors)
 	PropRow.loader = loader
 	PropRow.mod_info = mod_info
+	widget_props.guides_tab.screen = ui_screen
+	widget_props.guides_tab.sync_display()
+	guide_lines.screen = ui_screen
+	guide_lines.queue_redraw()
 	element_tree.clear()
 	var root := element_tree.create_item()
 	for c in ui_screen.widget_root.get_children():
@@ -566,11 +571,12 @@ func _current_item_tab() -> ItemListTab:
 	match widget_props.current_tab:
 		1: return widget_props.art_tab
 		2: return widget_props.hit_tab
+		3: return widget_props.guides_tab
 	return null
 
 func _update_item_gizmo() -> void:
 	var tab := _current_item_tab()
-	if tab == null or selected_widget == null:
+	if tab == null or selected_widget == null or tab.kind == ItemListTab.ItemKind.GUIDES:
 		item_selection.visible = false
 		return
 	var index := tab.selected_index()
@@ -632,6 +638,8 @@ func _on_item_selection_edit_ended() -> void:
 	undo_redo.commit_action()
 
 func _own_items(widget: UiScreen.Widget, tab: ItemListTab) -> Array:
+	if tab.kind == ItemListTab.ItemKind.GUIDES:
+		return ui_screen.guides
 	var raw := widget.config.get_raw()
 	if tab.kind == ItemListTab.ItemKind.ART:
 		var presentation = raw.get_or_add("Presentation", {})
@@ -646,9 +654,12 @@ func _own_items(widget: UiScreen.Widget, tab: ItemListTab) -> Array:
 	return hits
 
 func _after_item_change(tab: ItemListTab, widget: UiScreen.Widget, select_index: int = -1) -> void:
-	widget.emit_signal("update")
-	if tab.widget != widget:
-		return
+	if tab.kind == ItemListTab.ItemKind.GUIDES:
+		guide_lines.queue_redraw()
+	if widget != null:
+		widget.emit_signal("update")
+		if tab.widget != widget:
+			return
 	tab.sync_display(true)
 	if select_index >= 0:
 		tab.select_item(select_index)
@@ -665,7 +676,10 @@ func _on_item_prop_changed(index: int, key: String, value: Variant, tab: ItemLis
 	var had: bool = key in item
 	var old = item.get(key)
 	var item_type := str(item.get("type", ""))
-	var descriptors := ScreenPropDefs.art_props(item_type) if tab.kind == ItemListTab.ItemKind.ART else ScreenPropDefs.hit_props(item_type)
+	var descriptors := ScreenPropDefs.art_props(item_type)
+	match tab.kind:
+		ItemListTab.ItemKind.HIT: descriptors = ScreenPropDefs.hit_props(item_type)
+		ItemListTab.ItemKind.GUIDES: descriptors = ScreenPropDefs.guide_props(item_type)
 	var pair := ScreenPropDefs.pair_of(descriptors, key)
 	if pair != "" and pair in item:
 		pair = ""
@@ -703,7 +717,10 @@ func _on_item_prop_removed(index: int, key: String, tab: ItemListTab) -> void:
 
 func _on_item_added(type: String, tab: ItemListTab) -> void:
 	var widget := tab.widget
-	var config := ScreenPropDefs.item_template(type) if tab.kind == ItemListTab.ItemKind.ART else ScreenPropDefs.hit_template(type)
+	var config := ScreenPropDefs.item_template(type)
+	match tab.kind:
+		ItemListTab.ItemKind.HIT: config = ScreenPropDefs.hit_template(type)
+		ItemListTab.ItemKind.GUIDES: config = ScreenPropDefs.guide_template(type)
 	undo_redo.create_action("Add item")
 	undo_redo.add_do_method(func ():
 		var items := _own_items(widget, tab)

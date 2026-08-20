@@ -11,6 +11,7 @@ var editable := true
 @onready var rows_box: VBoxContainer = $Properties/Rows
 @onready var art_tab: ItemListTab = $Art
 @onready var hit_tab: ItemListTab = $HitArea
+@onready var guides_tab: ItemListTab = $Guides
 
 var _style_ids: Array = []
 var _slot_values: Array = []

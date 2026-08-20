@@ -3,9 +3,13 @@ class_name ItemListTab extends VBoxContainer
 enum ItemKind {
 	ART,
 	HIT,
+	GUIDES,
 }
 
 @export var kind: ItemKind = ItemKind.ART
+
+## GUIDES items live on the screen, not on the selected widget.
+var screen: UiScreen = null
 
 signal item_selected(index: int)
 signal item_prop_changed(index: int, key: String, value: Variant)
@@ -29,7 +33,11 @@ func _ready() -> void:
 	var add_menu := MenuButton.new()
 	add_menu.text = "Add"
 	var add_popup := add_menu.get_popup()
-	for t in (ScreenPropDefs.ART_TYPES if kind == ItemKind.ART else ScreenPropDefs.HIT_TYPES):
+	var add_types: Array[String] = ScreenPropDefs.ART_TYPES
+	match kind:
+		ItemKind.HIT: add_types = ScreenPropDefs.HIT_TYPES
+		ItemKind.GUIDES: add_types = ScreenPropDefs.GUIDE_TYPES
+	for t in add_types:
 		add_popup.add_item(t)
 	add_popup.index_pressed.connect(func (idx: int): item_added.emit(add_popup.get_item_text(idx)))
 	toolbar.add_child(add_menu)
@@ -67,6 +75,8 @@ func selected_index() -> int:
 	return _list.selected
 
 func display_items(target: UiScreen.Widget = widget) -> Array:
+	if kind == ItemKind.GUIDES:
+		return screen.guides if screen != null else []
 	if target == null:
 		return []
 	return _raw_items(target.config.get_raw() if is_own(target) else target._get_style_config_raw())
@@ -82,6 +92,8 @@ func _raw_items(config: Dictionary) -> Array:
 	return hits if hits is Array else []
 
 func is_own(target: UiScreen.Widget = widget) -> bool:
+	if kind == ItemKind.GUIDES:
+		return true
 	if target == null:
 		return false
 	var raw := target.config.get_raw()
@@ -96,10 +108,15 @@ func sync_display(keep_selection: bool = false) -> void:
 	var own := editable and is_own()
 	for i in len(items):
 		var item_config := SafeDict.new(items[i] if items[i] is Dictionary else {})
-		var label := item_config.get_str("type", "?")
-		match item_config.get_str("type"):
-			"Graphic": label += "  %s" % item_config.get_str("texture").get_file()
-			"Text": label += "  %s" % item_config.get_str("fontname")
+		var label: String
+		if kind == ItemKind.GUIDES:
+			var item: Dictionary = items[i] if items[i] is Dictionary else {}
+			label = "%s  %.3f" % ["horizontal" if item.get("horizontal", false) else "vertical", float(item.get("position", 0.0))]
+		else:
+			label = item_config.get_str("type", "?")
+			match item_config.get_str("type"):
+				"Graphic": label += "  %s" % item_config.get_str("texture").get_file()
+				"Text": label += "  %s" % item_config.get_str("fontname")
 		_list.add_item(label, item_config.get_array("states") if kind == ItemKind.ART else null)
 	_override_button.visible = editable and widget != null and not is_own()
 	_list.reorder_enabled = own
@@ -120,7 +137,10 @@ func _sync_rows(index: int) -> void:
 	var item_config: Dictionary = items[index] if items[index] is Dictionary else {}
 	var own := editable and is_own()
 	var type := str(item_config.get("type", ""))
-	var descriptors := ScreenPropDefs.art_props(type) if kind == ItemKind.ART else ScreenPropDefs.hit_props(type)
+	var descriptors := ScreenPropDefs.art_props(type)
+	match kind:
+		ItemKind.HIT: descriptors = ScreenPropDefs.hit_props(type)
+		ItemKind.GUIDES: descriptors = ScreenPropDefs.guide_props(type)
 	for descriptor in descriptors:
 		var row := PropRow.new(descriptor)
 		var key: String = descriptor["key"]
