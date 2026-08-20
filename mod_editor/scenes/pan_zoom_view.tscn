@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://dpanzoomview1"]
+
+[ext_resource type="Script" path="res://mod_editor/scenes/pan_zoom_view.gd" id="1_pnzm"]
+
+[node name="PanZoom" type="SubViewportContainer"]
+stretch = true
+script = ExtResource("1_pnzm")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(512, 512)
+render_target_update_mode = 4

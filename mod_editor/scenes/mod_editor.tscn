@@ -6,36 +6,22 @@
 [ext_resource type="Script" uid="uid://bjxqkw5gm31fs" path="res://mod_editor/mod_editor.gd" id="2_psthy"]
 [ext_resource type="Script" uid="uid://dka3hib6uvxmv" path="res://mod_editor/preferences_popup.gd" id="3_lu55j"]
 [ext_resource type="Script" uid="uid://hbbd0otu08cy" path="res://mod_editor/help.gd" id="3_o21qr"]
+[ext_resource type="PackedScene" uid="uid://dabqk5nitw3dt" path="res://mod_editor/screen_editor/screen_editor.tscn" id="3_s2o5q"]
 [ext_resource type="Script" uid="uid://1q4i4ombw20i" path="res://mod_editor/file_browser.gd" id="4_7lwh1"]
 [ext_resource type="Script" uid="uid://q4hw6gqc17v7" path="res://mod_editor/preferences_lookup_folder.gd" id="4_lu55j"]
 [ext_resource type="Script" uid="uid://d2oknoy57kyud" path="res://mod_editor/file_tree.gd" id="5_k0d43"]
 [ext_resource type="Script" uid="uid://dqtf32cejxwnq" path="res://mod_editor/preview_window.gd" id="6_248tv"]
 [ext_resource type="Script" uid="uid://0ta178485bt1" path="res://mod_editor/preview_windows/preview_model.gd" id="7_eduue"]
-[ext_resource type="PackedScene" uid="uid://cjvqs4rirwkd4" path="res://addons/gdsquad/scenes/camera_controller.tscn" id="8_du8ri"]
-[ext_resource type="PackedScene" uid="uid://e0o507w2nm4k" path="res://addons/gdsquad/scenes/model.tscn" id="9_2lwek"]
-[ext_resource type="PackedScene" uid="uid://cdhlwvvospukk" path="res://addons/gdsquad/scenes/map.tscn" id="10_wvwbj"]
+[ext_resource type="PackedScene" path="res://mod_editor/scenes/preview_viewport.tscn" id="10_mvport"]
 [ext_resource type="Script" uid="uid://b5a8yxoljw12p" path="res://mod_editor/preview_windows/preview_text.gd" id="14_305us"]
+[ext_resource type="Script" uid="uid://7vwa3xflrch5" path="res://mod_editor/preview_windows/preview_screen.gd" id="14_q2nq6"]
 [ext_resource type="PackedScene" uid="uid://bva07yg60lnt" path="res://mod_editor/scenes/preview_top_menu.tscn" id="15_tmbvw"]
 [ext_resource type="Script" uid="uid://7sjqjigrluhg" path="res://mod_editor/preview_windows/preview_image.gd" id="16_pyr3p"]
+[ext_resource type="Script" uid="uid://bqo4pkfdjoms3" path="res://addons/gdsquad/ui_screeen/ui_screeen.gd" id="16_s2o5q"]
 [ext_resource type="PackedScene" uid="uid://bjf57revhmmg6" path="res://mod_editor/scenes/code_searchbar.tscn" id="17_g07yf"]
 [ext_resource type="Script" uid="uid://cjtiachugiaj4" path="res://mod_editor/preview_windows/preview_chunky.gd" id="17_r2ypo"]
 [ext_resource type="Script" uid="uid://b33i81k46yyp7" path="res://mod_editor/message_window.gd" id="18_kovvv"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_d0h0h"]
-sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
-ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
-
-[sub_resource type="Sky" id="Sky_7k6k4"]
-sky_material = SubResource("ProceduralSkyMaterial_d0h0h")
-
-[sub_resource type="Environment" id="Environment_fltsl"]
-background_mode = 2
-sky = SubResource("Sky_7k6k4")
-ambient_light_source = 3
-ambient_light_color = Color(0.8, 0.8, 0.8, 1)
-ambient_light_sky_contribution = 0.25
-reflected_light_source = 2
-tonemap_mode = 3
+[ext_resource type="PackedScene" path="res://mod_editor/scenes/pan_zoom_view.tscn" id="19_pnzm"]
 
 [node name="ModEditor" type="Control" unique_id=408298215]
 layout_mode = 3
@@ -59,6 +45,10 @@ access = 2
 filters = PackedStringArray("*.module")
 show_hidden_files = true
 use_native_dialog = true
+
+[node name="ScreenEditor" parent="." unique_id=2138810329 instance=ExtResource("3_s2o5q")]
+visible = false
+layout_mode = 1
 
 [node name="SplitContainer" type="SplitContainer" parent="." unique_id=1564487235]
 layout_mode = 1
@@ -303,6 +293,47 @@ size_flags_vertical = 3
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="Label2" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=1952528064]
+layout_mode = 2
+text = "Tcp Api "
+
+[node name="TcpApiOptions" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=753401721]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TcpApiEnabled" type="CheckButton" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=510931248]
+layout_mode = 2
+text = "Enabled"
+
+[node name="PortRow" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=753401722]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/PortRow" unique_id=510931251]
+layout_mode = 2
+text = "Port:"
+vertical_alignment = 1
+
+[node name="TcpApiPort" type="SpinBox" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/PortRow" unique_id=510931250]
+layout_mode = 2
+size_flags_horizontal = 0
+min_value = 1024.0
+max_value = 65535.0
+value = 8765.0
+rounded = true
+select_all_on_focus = true
+
+[node name="CheckRow" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=753401723]
+layout_mode = 2
+
+[node name="TestButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/CheckRow" unique_id=1145849474]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Check"
+
+[node name="TestResult" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=544778144]
+layout_mode = 2
+vertical_alignment = 1
+
 [node name="Appearance" type="MarginContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer" unique_id=773037058]
 visible = false
 layout_mode = 2
@@ -445,12 +476,13 @@ tabs_visible = false
 [node name="PreviewWindow" type="TabContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows" unique_id=67337640]
 layout_mode = 2
 size_flags_horizontal = 3
-current_tab = 0
+current_tab = 2
 clip_tabs = false
 script = ExtResource("6_248tv")
 metadata/_tab_index = 0
 
 [node name="Error" type="CenterContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=95183008]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -486,12 +518,7 @@ mouse_target = true
 [node name="CameraTimer" type="Timer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" unique_id=426200711]
 wait_time = 0.7
 
-[node name="SubViewport" type="SubViewport" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" unique_id=1425931178]
-own_world_3d = true
-transparent_bg = true
-handle_input_locally = false
-msaa_3d = 2
-size = Vector2i(2, 2)
+[node name="SubViewport" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" unique_id=1425931178 instance=ExtResource("10_mvport")]
 render_target_update_mode = 0
 
 [node name="MenuButton" type="MenuButton" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1411009158]
@@ -507,49 +534,72 @@ popup/item_0/id = 0
 popup/item_1/text = "Reset Camera"
 popup/item_1/id = 1
 
-[node name="CameraController" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1507099097 instance=ExtResource("8_du8ri")]
-transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364818, 0, -0.17364818, 0.9848077, 0, 0, 0)
-zoom_distance = 3.0
-orbit_speed = 5.0
-orbit_speed_damp_rate = 6.0
-declination_speed = 5.0
-declination_speed_damp_rate = 8.0
-min_declination_angle = -3.141592653589793
-max_declination_angle = 3.141592653589793
-process_input = false
+[node name="Screen" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=2066183441]
+layout_mode = 2
+script = ExtResource("14_q2nq6")
+metadata/_tab_index = 2
 
-[node name="camera" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport/CameraController" index="0"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
-fov = 40.0
+[node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen" unique_id=1605276833 instance=ExtResource("15_tmbvw")]
+layout_mode = 2
+theme_override_constants/margin_right = 10
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport/CameraController" unique_id=846452295]
-transform = Transform3D(-0.8660256, -0.43301243, 0.24999976, 0.08682404, 0.36216766, 0.92806053, -0.49240357, 0.82543015, -0.27605057, 0, 0, 0)
-light_energy = 0.5
-shadow_enabled = true
-directional_shadow_blend_splits = true
-directional_shadow_max_distance = 1.0
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Menu/Items/MenuBar" parent_id_path=PackedInt32Array(1605276833, 931220279) index="0" unique_id=2013971614]
+item_count = 1
+item_0/text = "Open Editor"
+item_0/id = 0
 
-[node name="Model" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1040144413 instance=ExtResource("9_2lwek")]
-transform = Transform3D(1, 0, -2.98023e-08, 0, 1, 2.98023e-08, 0, 0, 1, 0, 0, 0)
+[node name="AspectRatio" type="AspectRatioContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen" unique_id=2019642038]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+ratio = 1.33
 
-[node name="Map" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=861393881 instance=ExtResource("10_wvwbj")]
+[node name="UiScreen" type="Control" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/AspectRatio" unique_id=1452725975]
+layout_mode = 2
+script = ExtResource("16_s2o5q")
+metadata/_custom_type_script = "uid://bqo4pkfdjoms3"
+
+[node name="Container" type="SubViewportContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen" unique_id=441132065]
 visible = false
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport" unique_id=1183164790]
-environment = SubResource("Environment_fltsl")
+[node name="SubViewport" type="SubViewport" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Container" unique_id=1070661842]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(2, 2)
+size_2d_override_stretch = true
+render_target_update_mode = 0
+
+[node name="AspectRatio" type="AspectRatioContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Container/SubViewport" unique_id=427025000]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+ratio = 1.33
+
+[node name="UiScreen" type="Control" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Container/SubViewport/AspectRatio" unique_id=2072299258]
+layout_mode = 2
+script = ExtResource("16_s2o5q")
+metadata/_custom_type_script = "uid://bqo4pkfdjoms3"
 
 [node name="Text" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=2059010276]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 0
 script = ExtResource("14_305us")
-metadata/_tab_index = 2
+metadata/_tab_index = 3
 
 [node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" unique_id=1128704356 instance=ExtResource("15_tmbvw")]
 layout_mode = 2
 theme_override_constants/margin_right = 10
 
-[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/MenuBar" index="0"]
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/Items/MenuBar" parent_id_path=PackedInt32Array(1128704356, 931220279) index="0" unique_id=2013971614]
 item_count = 4
 item_0/text = "Collapse All"
 item_0/id = 0
@@ -559,6 +609,11 @@ item_2/text = "Save"
 item_2/id = 2
 item_3/text = "Reload from Compiled"
 item_3/id = 4
+
+[node name="Run" type="Button" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/Items" parent_id_path=PackedInt32Array(1128704356, 145936201) index="1" unique_id=1685230447]
+visible = false
+layout_mode = 2
+text = "Run"
 
 [node name="Search" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu" unique_id=1809190982 node_paths=PackedStringArray("codeedit") instance=ExtResource("17_g07yf")]
 layout_mode = 2
@@ -584,13 +639,13 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 0
 script = ExtResource("14_305us")
-metadata/_tab_index = 3
+metadata/_tab_index = 4
 
 [node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" unique_id=983136275 instance=ExtResource("15_tmbvw")]
 layout_mode = 2
 theme_override_constants/margin_right = 10
 
-[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu/MenuBar" index="0"]
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu/Items/MenuBar" parent_id_path=PackedInt32Array(983136275, 931220279) index="0" unique_id=2013971614]
 item_count = 2
 item_0/text = "Collapse All"
 item_0/id = 0
@@ -622,20 +677,28 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 0
 script = ExtResource("16_pyr3p")
-metadata/_tab_index = 4
+metadata/_tab_index = 5
 
 [node name="Menu" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" unique_id=293146786 instance=ExtResource("15_tmbvw")]
 layout_mode = 2
 
-[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu/MenuBar" index="0"]
+[node name="Edit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu/Items/MenuBar" parent_id_path=PackedInt32Array(293146786, 931220279) index="0" unique_id=2013971614]
 item_count = 1
 item_0/text = "Flip"
 item_0/checkable = 1
 item_0/id = 0
 
-[node name="Image" type="TextureRect" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" unique_id=1702509755]
+[node name="PanZoom" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" unique_id=1702509756 instance=ExtResource("19_pnzm")]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="Image" type="TextureRect" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/PanZoom/SubViewport" unique_id=1702509755]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 expand_mode = 1
 stretch_mode = 5
 
@@ -643,7 +706,7 @@ stretch_mode = 5
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
-metadata/_tab_index = 5
+metadata/_tab_index = 6
 
 [node name="Chunky" type="HSplitContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=1486891001]
 visible = false
@@ -652,7 +715,7 @@ size_flags_horizontal = 3
 split_offsets = PackedInt32Array(160)
 split_offset = 160
 script = ExtResource("17_r2ypo")
-metadata/_tab_index = 6
+metadata/_tab_index = 7
 
 [node name="Tree" type="Tree" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky" unique_id=2048204922]
 layout_mode = 2
@@ -769,7 +832,7 @@ context_menu_enabled = false
 emoji_menu_enabled = false
 line_folding = true
 gutters_draw_line_numbers = true
-metadata/_tab_index = 7
+metadata/_tab_index = 8
 
 [node name="MessageWindow" type="FoldableContainer" parent="SplitContainer/VSplitMessages" unique_id=151826633]
 layout_mode = 2
@@ -798,6 +861,7 @@ fit_content = true
 selection_enabled = true
 
 [connection signal="file_selected" from="FileDialog" to="." method="_on_mod_file_selected"]
+[connection signal="close" from="ScreenEditor" to="." method="_on_screen_editor_close"]
 [connection signal="id_pressed" from="SplitContainer/MenuBar/File" to="." method="_on_file_id_pressed"]
 [connection signal="id_pressed" from="SplitContainer/MenuBar/Edit" to="." method="_on_edit_id_pressed"]
 [connection signal="close_requested" from="SplitContainer/MenuBar/Edit/PreferencesPopup" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_close"]
@@ -810,6 +874,8 @@ selection_enabled = true
 [connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/SelectButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_select_blender_path"]
 [connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/TestButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_test_blender_button_pressed"]
 [connection signal="file_selected" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel/BlenderFileDialog" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_filedialog_select_blender_path"]
+[connection signal="toggled" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/TcpApiEnabled" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_tcp_api_enabled_toggled"]
+[connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/CheckRow/TestButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_test_tcp_api"]
 [connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Appearance/VBoxContainer/Button" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_open_config"]
 [connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer/SaveButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_save"]
 [connection signal="pressed" from="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer/CloseButton" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_close"]
@@ -825,25 +891,31 @@ selection_enabled = true
 [connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/LoadingIconsTimer" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_timer_timeout"]
 [connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/RmbMenu" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_on_rmb_menu_id_pressed"]
 [connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/FinishedTaskCleanup" to="SplitContainer/VSplitMessages/FileBrowser/FileTree" method="_finished_task_cleanup"]
-[connection signal="pressed" from="SplitContainer/VSplitMessages/FileBrowser/FileTree/OpenModPrompt/Button" to="." method="_on_file_id_pressed" binds= [1]]
+[connection signal="screen_editor_opened" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" to="." method="_on_screen_editor_open"]
 [connection signal="tab_changed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" method="_on_tab_changed"]
 [connection signal="focus_entered" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_focus_entered"]
 [connection signal="focus_exited" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_focus_exited"]
 [connection signal="mouse_entered" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_mouse_exited"]
 [connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/CameraTimer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model" method="_on_camera_check"]
-[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_edit_id_pressed"]
+[connection signal="open_editor" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" method="_on_screen_editor_open"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Menu/Items/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen" method="_on_menu_id_pressed"]
+[connection signal="run_lua" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" method="_on_run_lua"]
+[connection signal="stop_lua" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" method="_on_stop_lua"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/Items/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_edit_id_pressed"]
+[connection signal="pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/Items/Run" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_run_pressed"]
 [connection signal="gui_input" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_gui_input"]
 [connection signal="text_changed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_text_changed"]
 [connection signal="timeout" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Timer" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text" method="_on_timer_timeout"]
-[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_edit_id_pressed"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu/Items/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_edit_id_pressed"]
 [connection signal="gui_input" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_gui_input"]
 [connection signal="text_changed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Text" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled" method="_on_text_changed"]
-[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" method="_on_edit_id_pressed"]
+[connection signal="id_pressed" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu/Items/MenuBar/Edit" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image" method="_on_edit_id_pressed"]
 [connection signal="item_activated" from="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Tree" to="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky" method="_on_tree_item_activated"]
 [connection signal="folding_changed" from="SplitContainer/VSplitMessages/MessageWindow" to="SplitContainer/VSplitMessages/MessageWindow" method="_on_folding_changed"]
 
-[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Model/MarginContainer/SubViewportContainer/SubViewport/CameraController"]
+[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/PanZoom"]
+[editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Menu"]
 [editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu"]
 [editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Compiled/Menu"]
 [editable path="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Image/Menu"]

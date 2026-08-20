@@ -1,12 +1,17 @@
 class_name ImagePreviewWindow extends VBoxContainer
 
-@onready var image: TextureRect = $Image
+@onready var image: TextureRect = $PanZoom/SubViewport/Image
 #var layers: Dictionary[String, ImageTexture] = {}
-@onready var edit: PopupMenu = $Menu/MenuBar/Edit
+@onready var edit: PopupMenu = $Menu/Items/MenuBar/Edit
 
 enum EditCommands {
 	FLIP = 0,
+	RESET_VIEW = 1,
 }
+
+func _ready() -> void:
+	# an image has no interactive children: navigation is always on
+	$PanZoom.enabled = true
 
 var layer_images: Dictionary[int, ImageTexture] = {}
 
@@ -15,6 +20,8 @@ func _on_edit_id_pressed(id: int) -> void:
 		EditCommands.FLIP:
 			image.flip_v = not image.flip_v
 			edit.set_item_checked(EditCommands.FLIP, image.flip_v)
+		EditCommands.RESET_VIEW:
+			$PanZoom.reset()
 		_:
 			if id in layer_images:
 				for k in layer_images:
@@ -24,6 +31,7 @@ func _on_edit_id_pressed(id: int) -> void:
 func set_images(images: Dictionary[String, Image]) -> void:
 	edit.clear()
 	edit.add_check_item("Flip", EditCommands.FLIP)
+	edit.add_item("Reset View", EditCommands.RESET_VIEW)
 	var first_layer_name: String = images.keys()[0]
 	image.texture = ImageTexture.create_from_image(images[first_layer_name])
 	

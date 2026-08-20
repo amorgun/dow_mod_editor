@@ -3,12 +3,14 @@ class_name ScreenEditor extends Panel
 enum ViewMode {
 	INTERACTIVE,
 	PICKER,
+	NAVIGATE,
 }
 
-@onready var ui_screen: UiScreen = $VBoxContainer/Columns/Preview/UiScreeen
+@onready var pan_zoom: PanZoomView = $VBoxContainer/Columns/Preview/PanZoom
+@onready var ui_screen: UiScreen = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/UiScreeen
 @onready var element_tree: WidgetTree = $VBoxContainer/Columns/ElementTree
-@onready var selection: ResizerControl = $VBoxContainer/Columns/Preview/WidgetSelection
-@onready var item_selection: ResizerControl = $VBoxContainer/Columns/Preview/ItemSelection
+@onready var selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection
+@onready var item_selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/ItemSelection
 @onready var widget_props: WidgetProps = $VBoxContainer/Columns/Sidebar
 @onready var mode_option: OptionButton = $VBoxContainer/TopBar/Mode
 
@@ -494,7 +496,11 @@ func _select_row(widget: UiScreen.Widget) -> void:
 
 func _on_mode_selected(index: int) -> void:
 	ui_screen.is_interactive = index == ViewMode.INTERACTIVE
+	pan_zoom.enabled = index == ViewMode.NAVIGATE
 	_pick_stack = []
+
+func _on_reset_view_pressed() -> void:
+	pan_zoom.reset()
 
 ## Picking is on the right button: the left button belongs to the gizmo.
 func _on_canvas_gui_input(event: InputEvent) -> void:
