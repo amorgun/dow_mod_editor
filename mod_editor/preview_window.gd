@@ -10,7 +10,7 @@ class_name PreviewWindow extends TabContainer
 @onready var meta_content: TextEdit = $Meta
 
 signal saved(preview: PreviewWindow)
-signal screen_editor_opened(content: String, loader: ModResourceLoader, mod_info: ModInfo)
+signal screen_editor_opened(content: String, loader: ModResourceLoader, mod_info: ModInfo, index_file: ModInfo.IndexFile)
 signal script_running_changed(running: bool)
 
 enum PreviewTabs {
@@ -57,7 +57,7 @@ func _on_tab_changed(tab: PreviewTabs) -> void:
 	deferred_initializers.erase(tab)
 
 func _on_screen_editor_open() -> void:
-	screen_editor_opened.emit(context.text, context.loader, context.mod_info)
+	screen_editor_opened.emit(context.text, context.loader, context.mod_info, context.index_file)
 
 var _lua_env: LuaApiEnv
 

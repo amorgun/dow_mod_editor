@@ -25,6 +25,7 @@ static var _item_clipboard: Dictionary = {}
 
 var _pick_stack: Array[UiScreen.Widget] = []
 var _pick_index := 0
+var _index_file: ModInfo.IndexFile = null
 
 signal close
 
@@ -60,6 +61,10 @@ func _input(event: InputEvent) -> void:
 		var focused := get_viewport().gui_get_focus_owner()
 		if focused is LineEdit and not focused.get_global_rect().has_point(event.global_position):
 			focused.release_focus()
+	if event.is_action_pressed("ui_save", false, true):
+		_save()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("ui_cancel"):
 		selection.cancel_interaction()
 		item_selection.cancel_interaction()
@@ -87,7 +92,8 @@ func _input(event: InputEvent) -> void:
 			if selected_widget.parent_widget != null:
 				_on_delete_widget(selected_widget, element_tree.get_selected())
 
-func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo) -> void:
+func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo, index_file: ModInfo.IndexFile) -> void:
+	_index_file = index_file
 	for c in ui_screen.widget_root.get_children():
 		ui_screen.widget_root.remove_child(c)
 		c.queue_free()
@@ -514,6 +520,15 @@ func _on_mode_selected(index: int) -> void:
 
 func _on_reset_view_pressed() -> void:
 	pan_zoom.reset()
+
+func _save() -> void:
+	if _index_file == null:
+		return
+	var result := Core.set_text(_index_file, ScreenParser.serialize_view(ui_screen))
+	if result.ok:
+		GsqLogger.info("Screen saved: %s", [_index_file.name])
+	else:
+		GsqLogger.info("Screen save failed: %s", [result.error])
 
 ## The selected display shape drives the editor container; the screen keeps
 ## its own data/default ratio inside it. Last option is Responsive.

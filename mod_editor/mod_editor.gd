@@ -71,10 +71,10 @@ func _input(event: InputEvent) -> void:
 func _on_preferences_open_config_mod() -> void:
 	_on_mod_file_selected(Settings.config_module_path)
 
-func _on_screen_editor_open(content: String, loader: ModResourceLoader, mod_info: ModInfo) -> void:
+func _on_screen_editor_open(content: String, loader: ModResourceLoader, mod_info: ModInfo, index_file: ModInfo.IndexFile) -> void:
 	screen_editor.visible = true
 	mod_editor.visible = false
-	screen_editor.setup_content(content, loader, mod_info)
+	screen_editor.setup_content(content, loader, mod_info, index_file)
 
 func _on_screen_editor_close() -> void:
 	screen_editor.visible = false
