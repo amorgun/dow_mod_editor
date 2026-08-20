@@ -15,7 +15,7 @@ index 19aeace..3ec26d2 100755
  func duplicate(deep: bool = false) -> SafeDict:
  	return SafeDict.new(_data.duplicate(deep))
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..5c6c05e 100755
+index 44cf447..d6d2b86 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
 @@ -1,7 +1,10 @@
@@ -224,6 +224,15 @@ index 44cf447..5c6c05e 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
+@@ -430,7 +479,7 @@ func create_widget(parent: Widget = null) -> Widget:
+ 
+ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
+ 	var widget := create_widget(parent)
+-	var name := config.get_str("name")
++	var widget_name := config.get_str("name")
+ 	widget.config = config
+ 	widget.init_size()
+ 	widget.sync_display()
 @@ -442,7 +491,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
@@ -232,3 +241,13 @@ index 44cf447..5c6c05e 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
+@@ -451,7 +499,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+ 			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
+ 			if prev != null:
+ 				prev.visible = false
+-	if name in widgets_info:
+-		widget.visible = not widgets_info[name].get_bool("hidden", false)
++	if widget_name in widgets_info:
++		widget.visible = not widgets_info[widget_name].get_bool("hidden", false)
+ 	widget.state = UiScreen.WIDGET_STATE.NORMAL
+ 	return widget

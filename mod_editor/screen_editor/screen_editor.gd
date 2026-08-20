@@ -153,14 +153,14 @@ static func _collect_widget_names(widget: UiScreen.Widget, taken: Dictionary) ->
 		if c is UiScreen.Widget:
 			_collect_widget_names(c, taken)
 
-static func unique_name_in(taken: Dictionary, name: String) -> String:
-	if name not in taken:
-		taken[name] = true
-		return name
-	var base := name
-	var dot := name.rfind(".")
-	if dot != -1 and name.substr(dot + 1).is_valid_int():
-		base = name.substr(0, dot)
+static func unique_name_in(taken: Dictionary, widget_name: String) -> String:
+	if widget_name not in taken:
+		taken[widget_name] = true
+		return widget_name
+	var base := widget_name
+	var dot := widget_name.rfind(".")
+	if dot != -1 and widget_name.substr(dot + 1).is_valid_int():
+		base = widget_name.substr(0, dot)
 	var i := 0
 	while true:
 		var candidate := "%s.%03d" % [base, i]
@@ -168,12 +168,12 @@ static func unique_name_in(taken: Dictionary, name: String) -> String:
 			taken[candidate] = true
 			return candidate
 		i += 1
-	return name
+	return widget_name
 
-static func unique_name(screen: UiScreen, name: String) -> String:
+static func unique_name(screen: UiScreen, widget_name: String) -> String:
 	var taken := collect_names(screen)
-	taken.erase(name)
-	return unique_name_in(taken, name)
+	taken.erase(widget_name)
+	return unique_name_in(taken, widget_name)
 
 static func _num(v: float) -> Variant:
 	return int(roundf(v)) if absf(v - roundf(v)) < 0.01 else snappedf(v, 0.001)
@@ -353,9 +353,9 @@ func _on_copy_widget(widget: UiScreen.Widget) -> void:
 	_widget_clipboard = {"config": config, "infos": infos}
 
 func _collect_infos(screen: UiScreen, config: Dictionary, infos: Array) -> void:
-	var name := str(config.get("name", ""))
-	if name in screen.widgets_info:
-		infos.append(screen.widgets_info[name].get_raw().duplicate(true))
+	var widget_name := str(config.get("name", ""))
+	if widget_name in screen.widgets_info:
+		infos.append(screen.widgets_info[widget_name].get_raw().duplicate(true))
 	for c in config.get("Children", []):
 		if c is Dictionary:
 			_collect_infos(screen, c, infos)
@@ -364,11 +364,11 @@ func _collect_infos(screen: UiScreen, config: Dictionary, infos: Array) -> void:
 			_collect_infos(screen, config[s], infos)
 
 func _uniquify_config(config: Dictionary, taken: Dictionary, renames: Dictionary) -> void:
-	var name := str(config.get("name", ""))
-	var new_name := unique_name_in(taken, name)
-	if new_name != name:
+	var widget_name := str(config.get("name", ""))
+	var new_name := unique_name_in(taken, widget_name)
+	if new_name != widget_name:
 		config["name"] = new_name
-		renames[name] = new_name
+		renames[widget_name] = new_name
 	for c in config.get("Children", []):
 		if c is Dictionary:
 			_uniquify_config(c, taken, renames)

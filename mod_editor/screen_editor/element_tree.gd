@@ -213,8 +213,8 @@ static func rename_info(screen: UiScreen, from: String, to: String) -> void:
 		entry.set_value("name", to)
 		screen.widgets_info[to] = entry
 
-static func set_info_hidden(screen: UiScreen, name: String, hidden: bool) -> void:
-	var entry: SafeDict = screen.widgets_info.get_or_add(name, SafeDict.new({"name": name}))
+static func set_info_hidden(screen: UiScreen, widget_name: String, hidden: bool) -> void:
+	var entry: SafeDict = screen.widgets_info.get_or_add(widget_name, SafeDict.new({"name": widget_name}))
 	entry.set_value("hidden", hidden)
 
 func _on_item_activated() -> void:
@@ -256,19 +256,19 @@ func _on_item_button_clicked(item: TreeItem, _column: int, _id: int, mouse_butto
 		return
 	var widget := _get_widget(item)
 	var screen := widget.screen
-	var name := widget.full_name
+	var widget_name := widget.full_name
 	var now_visible := widget.visible
 	undo_redo.create_action("Hide widget")
 	undo_redo.add_do_method(func ():
 		widget.visible = not now_visible
 		widget.state = UiScreen.WIDGET_STATE.NORMAL
-		set_info_hidden(screen, name, now_visible)
+		set_info_hidden(screen, widget_name, now_visible)
 		widget.emit_signal("update")
 	)
 	undo_redo.add_undo_method(func ():
 		widget.visible = now_visible
 		widget.state = UiScreen.WIDGET_STATE.NORMAL
-		set_info_hidden(screen, name, not now_visible)
+		set_info_hidden(screen, widget_name, not now_visible)
 		widget.emit_signal("update")
 	)
 	undo_redo.commit_action()
