@@ -100,6 +100,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+stretch_mode = 0
 
 [node name="Canvas" type="Control" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free" unique_id=1960177143]
 layout_mode = 1
