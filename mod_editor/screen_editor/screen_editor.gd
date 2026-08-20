@@ -272,10 +272,10 @@ func _on_select_widget(widget: UiScreen.Widget) -> void:
 	selection.anchor_right = (widget_rect.end.x - screen_rect.position.x) / screen_rect.size.x
 	selection.anchor_bottom = (widget_rect.end.y - screen_rect.position.y) / screen_rect.size.y
 	selection.visible = widget_props.current_tab == 0 and _gizmos_allowed()
-	item_selection.visible = false
 
 	if widget == selected_widget:
 		# gizmo refreshed above; the prop panel refreshes via the update signal
+		_update_item_gizmo()
 		return
 	if selected_widget != null and selected_widget.is_connected("update", widget_props.sync_display):
 		selected_widget.disconnect("update", widget_props.sync_display)
@@ -284,6 +284,7 @@ func _on_select_widget(widget: UiScreen.Widget) -> void:
 	_selected_editable = item == null or not item.get_meta("style_owned", false)
 	widget_props.set_widget(widget, _selected_editable)
 	widget.connect("update", widget_props.sync_display)
+	_update_item_gizmo()
 
 func _on_widget_select_update(_data: Vector2) -> void:
 	if selected_widget == null:
