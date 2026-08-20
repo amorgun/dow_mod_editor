@@ -3,7 +3,7 @@ class_name GuideLines extends Control
 
 signal guide_dragged(index: int, new_position: float)
 
-const COLOR := Color(0.2, 0.8, 0.9, 0.7)
+var color := Color(0.2, 0.8, 0.9, 0.7)
 
 var screen: UiScreen = null
 ## Half-width in px of the drag area around a line, from the editor config.
@@ -23,9 +23,9 @@ func _draw() -> void:
 			continue
 		var pos := _drag_position if i == _drag_index else float(g.get("position", 0.0))
 		if bool(g.get("horizontal", false)):
-			draw_line(Vector2(0, pos * size.y), Vector2(size.x, pos * size.y), COLOR)
+			draw_line(Vector2(0, pos * size.y), Vector2(size.x, pos * size.y), color)
 		else:
-			draw_line(Vector2(pos * size.x, 0), Vector2(pos * size.x, size.y), COLOR)
+			draw_line(Vector2(pos * size.x, 0), Vector2(pos * size.x, size.y), color)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:

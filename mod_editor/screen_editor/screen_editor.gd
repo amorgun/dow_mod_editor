@@ -18,6 +18,14 @@ enum ViewMode {
 @onready var mode_option: OptionButton = $VBoxContainer/TopBar/Mode
 @onready var snap_check: CheckBox = $VBoxContainer/TopBar/SnapCheck
 @onready var snap_step_spin: SpinBox = $VBoxContainer/TopBar/SnapStep
+@onready var widget_select_rect: ReferenceRect = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection/ReferenceRect
+@onready var item_select_rect: ReferenceRect = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection/ReferenceRect
+@onready var hit_fill: Control = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection/HitFill
+@onready var hit_fill_base: ColorRect = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection/HitFill/Base
+
+var _color_art_select: Color
+var _color_hit_area: Color
+var _color_hit_fit: Color
 
 var undo_redo := UndoRedo.new()
 var selected_widget: UiScreen.Widget
@@ -48,10 +56,18 @@ func _ready() -> void:
 	view_ratio_option.add_item("Responsive")
 	snap_step_spin.value = view_config.get_value("snap_step", 8.0, TYPE_FLOAT)
 	guide_lines.grab_margin = view_config.get_value("guide_grab_margin", 4.0, TYPE_FLOAT)
+	widget_select_rect.border_color = _config_color(view_config, "color_widget_select", Color(0.797, 0.36, 0.194))
+	_color_art_select = _config_color(view_config, "color_art_select", Color(0.2, 0.55, 0.9))
+	_color_hit_area = _config_color(view_config, "color_hit_area", Color(0.88, 0.63, 0.13))
+	guide_lines.color = _config_color(view_config, "color_guide", Color(0.2, 0.8, 0.9, 0.7))
+	hit_fill_base.color = _config_color(view_config, "color_hit_miss", Color(1.0, 0.0, 0.0, 0.33))
+	_color_hit_fit = _config_color(view_config, "color_hit_fit", Color(0.0, 0.8, 0.0, 0.33))
 	_apply_snap()
 	for gizmo in [selection, item_selection]:
 		gizmo.drag_started.connect(_update_snap_lines)
 		gizmo.resize_started.connect(_update_snap_lines)
+	item_selection.interactive_dragged.connect(_on_item_select_update)
+	item_selection.interactive_resized.connect(_on_item_select_update)
 	widget_props.guides_tab.hide_all_toggled.connect(func (hidden: bool): guide_lines.visible = not hidden)
 	for tab in [widget_props.art_tab, widget_props.hit_tab, widget_props.guides_tab]:
 		tab.item_selected.connect(_on_item_selected.bind(tab))
@@ -211,6 +227,16 @@ static func unique_name(screen: UiScreen, widget_name: String) -> String:
 static func _num(v: float) -> Variant:
 	return int(roundf(v)) if absf(v - roundf(v)) < 0.01 else snappedf(v, 0.001)
 
+## Reads an {R, G, B, A} float array from the editor config.
+static func _config_color(config, key: String, fallback: Color) -> Color:
+	var value: Array = config.get_value(key, [], TYPE_ARRAY)
+	if len(value) < 3 or len(value) > 4:
+		return fallback
+	for c in value:
+		if c is not float and c is not int:
+			return fallback
+	return Color(value[0], value[1], value[2], value[3] if len(value) == 4 else 1.0)
+
 func _reinit_subtree(widget: UiScreen.Widget) -> void:
 	widget.init_size()
 	widget.sync_display()
@@ -251,9 +277,11 @@ func _on_select_widget(widget: UiScreen.Widget) -> void:
 	widget.connect("update", widget_props.sync_display)
 
 func _on_widget_select_update(_data: Vector2) -> void:
+	if selected_widget == null:
+		return
 	var parent: UiScreen.Widget = selected_widget.parent_widget
 	var rect_selection := selection.get_global_rect()
-	var rect_parent := parent.get_global_rect()
+	var rect_parent := parent.get_global_rect() if parent != null else ui_screen.widget_root.get_global_rect()
 
 	selected_widget.relative_pos = (rect_selection.position - rect_parent.position) / rect_parent.size
 	selected_widget.relative_size = rect_selection.size / rect_parent.size
@@ -644,6 +672,45 @@ func _update_item_gizmo() -> void:
 	item_selection.anchor_right = (rect.end.x - screen_rect.position.x) / screen_rect.size.x
 	item_selection.anchor_bottom = (rect.end.y - screen_rect.position.y) / screen_rect.size.y
 	item_selection.visible = tab.is_own() and tab.editable
+	var is_hit := tab.kind == ItemListTab.ItemKind.HIT
+	item_select_rect.border_color = _color_hit_area if is_hit else _color_art_select
+	hit_fill.visible = is_hit
+	if is_hit:
+		_update_hit_fill(rect)
+
+func _on_item_select_update(_data: Vector2) -> void:
+	if hit_fill.visible:
+		_update_hit_fill(item_selection.get_global_rect())
+
+## Green pieces = the part of the hitbox inside every ancestor's hit area,
+## i.e. what stays clickable under hierarchical hit testing. Ancestors with
+## no hitboxes of their own don't constrain. Pool of ColorRects after Base.
+func _update_hit_fill(rect: Rect2) -> void:
+	var pieces: Array[Rect2] = [rect]
+	var ancestor: UiScreen.Widget = selected_widget.parent_widget if selected_widget != null else null
+	while ancestor != null:
+		if len(ancestor.hit_rects) > 0:
+			var ancestor_rect := ancestor.get_global_rect()
+			var clipped: Array[Rect2] = []
+			for piece in pieces:
+				for hr in ancestor.hit_rects:
+					var world := Rect2(ancestor_rect.position + hr.position * ancestor_rect.size, hr.size * ancestor_rect.size)
+					var intersection := piece.intersection(world)
+					if intersection.has_area():
+						clipped.append(intersection)
+			pieces = clipped
+		ancestor = ancestor.parent_widget
+	while hit_fill.get_child_count() - 1 < len(pieces):
+		var fit_rect := ColorRect.new()
+		fit_rect.color = _color_hit_fit
+		fit_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hit_fill.add_child(fit_rect)
+	for i in range(1, hit_fill.get_child_count()):
+		var fit_rect: ColorRect = hit_fill.get_child(i)
+		fit_rect.visible = i - 1 < len(pieces)
+		if fit_rect.visible:
+			fit_rect.position = pieces[i - 1].position - rect.position
+			fit_rect.size = pieces[i - 1].size
 
 func _on_item_selection_edit_ended() -> void:
 	var tab := _current_item_tab()

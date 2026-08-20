@@ -260,7 +260,7 @@ index 0000000..a37e305
 +grow_vertical = 2
 +mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..b2ae33b 100755
+index 44cf447..8560536 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
 @@ -1,7 +1,23 @@
@@ -416,7 +416,7 @@ index 44cf447..b2ae33b 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +425,73 @@ class GraphicArt extends Art:
+@@ -420,8 +425,78 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
@@ -429,6 +429,8 @@ index 44cf447..b2ae33b 100755
 +	$RatioToggle.fixed = fixed
 +
 +## All widgets whose HitArea contains the global point, top-most first.
++## Hit testing is hierarchical: a widget's HitArea clips its descendants, so
++## a point outside a parent's hitboxes can never hit the children.
 +func widgets_at(point: Vector2) -> Array[Widget]:
 +	var res: Array[Widget] = []
 +	for c in widget_root.get_children():
@@ -440,7 +442,10 @@ index 44cf447..b2ae33b 100755
 +func _collect_hits(widget: Widget, point: Vector2, res: Array[Widget]) -> void:
 +	if not widget.visible:
 +		return
-+	if widget.hit_test_global(point):
++	var self_hit := widget.hit_test_global(point)
++	if len(widget.hit_rects) > 0 and not self_hit:
++		return
++	if self_hit:
 +		res.append(widget)
 +	for slot_root in widget.slot_roots.values():
 +		for type_root in slot_root.get_children():
@@ -490,7 +495,7 @@ index 44cf447..b2ae33b 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +500,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +505,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -499,7 +504,7 @@ index 44cf447..b2ae33b 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +512,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +517,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -507,7 +512,7 @@ index 44cf447..b2ae33b 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +520,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +525,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false
