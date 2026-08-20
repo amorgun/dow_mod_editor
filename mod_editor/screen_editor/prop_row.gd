@@ -16,8 +16,10 @@ var _color_popup: PopupPanel = null
 var _color_picker: ColorPicker = null
 var _file_picker: ModFilePicker = null
 
-## The open screen file's modset loader; path pickers browse only it.
+## The open screen file's modset loader and mod index; path pickers browse
+## only this mod, sharing the lazily loaded index with the file browser.
 static var loader: ModResourceLoader = null
+static var mod_info: ModInfo = null
 
 static var _palette_colors: Dictionary = {}
 static var _palette_names: Array = []
@@ -85,7 +87,7 @@ func _browse(edit: LineEdit) -> void:
 	var cfg: Dictionary = descriptor["picker"]
 	if _file_picker == null:
 		_file_picker = ModFilePicker.new()
-		_file_picker.loader = loader
+		_file_picker.mod_info = mod_info
 		_file_picker.root = cfg["root"]
 		_file_picker.list_entries = cfg["list_entries"]
 		_file_picker.load_preview = cfg["load_preview"]
@@ -99,7 +101,7 @@ func _browse(edit: LineEdit) -> void:
 	if current.to_lower().begins_with("generic:"):
 		current = current.substr(8)
 	var dir := "data:" + current.get_base_dir().to_lower() if current != "" else ""
-	_file_picker.open(dir if dir not in ["", "data:"] else cfg["start_dir"])
+	_file_picker.open(dir if dir not in ["", "data:"] else cfg["start_dir"], cfg["start_dir"])
 
 func _popup_color_picker(anchor: Control) -> void:
 	if _color_popup == null:

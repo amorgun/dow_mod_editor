@@ -74,7 +74,7 @@ func _input(event: InputEvent) -> void:
 			if selected_widget.parent_widget != null:
 				_on_delete_widget(selected_widget, element_tree.get_selected())
 
-func setup_content(content: String, loader: ModResourceLoader) -> void:
+func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo) -> void:
 	for c in ui_screen.get_children():
 		ui_screen.remove_child(c)
 		c.queue_free()
@@ -84,6 +84,7 @@ func setup_content(content: String, loader: ModResourceLoader) -> void:
 	parser.setup_view(ui_screen)
 	PropRow.set_palette(ui_screen.common_colors)
 	PropRow.loader = loader
+	PropRow.mod_info = mod_info
 	element_tree.clear()
 	var root := element_tree.create_item()
 	for c in ui_screen.get_children():
