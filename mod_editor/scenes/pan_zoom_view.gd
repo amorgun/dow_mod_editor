@@ -12,6 +12,15 @@ var enabled := false:
 		if is_node_ready():
 			viewport.gui_disable_input = val
 
+## When > 0, the viewport renders 2D content at this constant pixel height
+## (size_2d_override) and stretches to fit, so authored font and pixel sizes
+## come out correct at any control size.
+var virtual_height := 0.0:
+	set(val):
+		virtual_height = val
+		if is_node_ready():
+			_apply_override()
+
 @onready var viewport: SubViewport = $SubViewport
 
 var _zoom := 1.0
@@ -20,6 +29,24 @@ var _dragging := false
 
 func _ready() -> void:
 	viewport.gui_disable_input = enabled
+	_apply_override()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and is_node_ready():
+		_apply_override()
+
+func _apply_override() -> void:
+	if virtual_height <= 0 or size.y <= 0:
+		viewport.size_2d_override = Vector2i.ZERO
+		return
+	viewport.size_2d_override = Vector2i(size * (virtual_height / size.y))
+	viewport.size_2d_override_stretch = true
+
+## Container-local pixels -> viewport 2D canvas units.
+func _to_canvas(p: Vector2) -> Vector2:
+	if virtual_height <= 0 or size.y <= 0:
+		return p
+	return p * (virtual_height / size.y)
 
 func reset() -> void:
 	_zoom = 1.0
@@ -44,13 +71,13 @@ func _gui_input(event: InputEvent) -> void:
 			_dragging = event.pressed
 			accept_event()
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_zoom_at(event.position, 1.2)
+			_zoom_at(_to_canvas(event.position), 1.2)
 			accept_event()
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_zoom_at(event.position, 1 / 1.2)
+			_zoom_at(_to_canvas(event.position), 1 / 1.2)
 			accept_event()
 	elif event is InputEventMouseMotion and _dragging:
-		_offset += event.relative
+		_offset += _to_canvas(event.relative)
 		_apply()
 		accept_event()
 

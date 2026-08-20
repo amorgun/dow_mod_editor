@@ -36,6 +36,7 @@ var _view_ratios: Array = []
 func _ready() -> void:
 	element_tree.undo_redo = undo_redo
 	var view_config := Settings.data.pload_lua("data:screen_editor.lua")
+	pan_zoom.virtual_height = view_config.get_value("viewport_height", 768.0, TYPE_FLOAT)
 	for item in view_config.get_value("preview_ratios", [], TYPE_ARRAY):
 		if item is Dictionary:
 			_view_ratios.append(SafeDict.new(item))

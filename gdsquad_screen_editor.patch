@@ -1,5 +1,5 @@
 diff --git a/formats/screen.gd b/formats/screen.gd
-index 532d3a9..8d2500e 100755
+index 532d3a9..68b92c4 100755
 --- a/formats/screen.gd
 +++ b/formats/screen.gd
 @@ -2,6 +2,7 @@ class_name ScreenParser
@@ -18,12 +18,11 @@ index 532d3a9..8d2500e 100755
  	var info_root: Dictionary = config_root.get_value("ToolInfo", {}, TYPE_DICTIONARY)
  	var info_config := SafeDict.new(info_root)
  	var widget_info_config := info_config.get_safe_array("WidgetInfo")
-@@ -73,6 +75,8 @@ func setup_view(root: UiScreen) -> void:
+@@ -73,6 +75,7 @@ func setup_view(root: UiScreen) -> void:
  	var screen_config := SafeDict.new(screen_root)
  	var widgets_config := screen_config.get_dict("Widgets")
  
 +	root.aspect_ratio = aspect_ratio
-+	root._update_virtual_root()
  	var widgets_root := root.build_widget_from_config(widgets_config)
 -	root.add_child(widgets_root)
 -	root.add_child(widgets_root.hitbox)
@@ -128,10 +127,10 @@ index 0000000..a37e305
 +grow_vertical = 2
 +mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..3fa2094 100755
+index 44cf447..fa0d821 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
-@@ -1,7 +1,23 @@
+@@ -1,7 +1,18 @@
  class_name UiScreen extends Control
  
 +## Manual event routing: the top-most widget whose HitArea matches gets the event.
@@ -139,23 +138,18 @@ index 44cf447..3fa2094 100755
  
 +## The screen's own aspect ratio; set when the screen data changes.
 +var aspect_ratio := 0.0
-+## Widgets mount here: a virtual-resolution canvas (constant pixel height from
-+## the editor-data config, scaled to fit) inside $RatioToggle's active root.
++## Widgets mount here: $RatioToggle's active root (fixed-ratio or responsive).
 +var widget_root: Control:
-+	get: return _virtual_root
-+
-+@onready var _box: Control = $RatioToggle/Free/Box
-+@onready var _virtual_root: Control = $RatioToggle/Free/Box/VirtualRoot
++	get: return $RatioToggle.content_root
 +
 +static var _default_ratio := 0.0
-+static var _virtual_height := 0.0
 +
 +var _hover_widget: Widget = null
 +
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -82,6 +98,15 @@ class Widget extends Control:
+@@ -82,6 +93,15 @@ class Widget extends Control:
  				c.visible = c.states & val
  			state = val
  	var hitbox: Control = null
@@ -171,7 +165,7 @@ index 44cf447..3fa2094 100755
  
  	static func _set_anchors(node: Control, pos: Vector2, size: Vector2) -> void:
  		node.anchor_left = pos.x
-@@ -109,26 +134,7 @@ class Widget extends Control:
+@@ -109,26 +129,7 @@ class Widget extends Control:
  		add_child(children_root)
  		hitbox = Control.new()
  		hitbox.name = "HitBox"
@@ -199,7 +193,7 @@ index 44cf447..3fa2094 100755
  
  	func _get_style_config_raw() -> Dictionary:
  		var style_id := config.get_array("style")
-@@ -151,26 +157,24 @@ class Widget extends Control:
+@@ -151,26 +152,24 @@ class Widget extends Control:
  		#res.mouse_filter = Control.MOUSE_FILTER_PASS
  		match type:
  			"Graphic":
@@ -243,7 +237,7 @@ index 44cf447..3fa2094 100755
  				res.add_child(node)
  			"Text":
  				var node := Label.new()
-@@ -234,6 +238,7 @@ class Widget extends Control:
+@@ -234,6 +233,7 @@ class Widget extends Control:
  				res.add_child(node)
  		for c in res.get_children():
  			c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -251,7 +245,7 @@ index 44cf447..3fa2094 100755
  		for s in config.get_array("states"):
  			res.states |= {
  				"Normal": UiScreen.WIDGET_STATE.NORMAL,
-@@ -274,9 +279,10 @@ class Widget extends Control:
+@@ -274,9 +274,10 @@ class Widget extends Control:
  
  		_set_anchors(self, relative_pos, relative_size)
  
@@ -265,7 +259,7 @@ index 44cf447..3fa2094 100755
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
  		var node_text := effective_config.get_str("text")
-@@ -288,6 +294,8 @@ class Widget extends Control:
+@@ -288,6 +289,8 @@ class Widget extends Control:
  		var presentation := effective_config.get_dict("Presentation")
  		for c in presentation.get_safe_array("Art"):
  			_add_art_item(c, node_text)
@@ -274,7 +268,7 @@ index 44cf447..3fa2094 100755
  
  	func get_widget_slot(slot: Slot, type: SlotType) -> Widget:
  		var root := slot_roots[slot].get_child(type)
-@@ -306,9 +314,6 @@ class Widget extends Control:
+@@ -306,9 +309,6 @@ class Widget extends Control:
  class Art extends Control:
  	var states: WIDGET_STATE = 0
  
@@ -284,7 +278,7 @@ index 44cf447..3fa2094 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +425,85 @@ class GraphicArt extends Art:
+@@ -420,8 +420,73 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
@@ -344,18 +338,6 @@ index 44cf447..3fa2094 100755
 +
 +func _ready() -> void:
 +	mouse_exited.connect(_on_mouse_exited)
-+	_box.resized.connect(_update_virtual_root)
-+	_update_virtual_root()
-+
-+## Fonts and pixel sizes are authored for a constant viewport height: the
-+## widgets render at that height and are scaled to fit the box.
-+func _update_virtual_root() -> void:
-+	if _virtual_height == 0.0 and Settings.data != null:
-+		_virtual_height = Settings.data.pload_lua("data:screen_editor.lua").get_value("viewport_height", 768.0, TYPE_FLOAT)
-+	if _box.size.y <= 0 or _virtual_height <= 0:
-+		return
-+	_virtual_root.size = Vector2(_box.size.x * _virtual_height / _box.size.y, _virtual_height)
-+	_virtual_root.scale = Vector2.ONE * (_box.size.y / _virtual_height)
 +
  func create_widget(parent: Widget = null) -> Widget:
  	var res := Widget.new()
@@ -370,7 +352,7 @@ index 44cf447..3fa2094 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +512,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +495,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -379,7 +361,7 @@ index 44cf447..3fa2094 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +524,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +507,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -387,7 +369,7 @@ index 44cf447..3fa2094 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +532,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +515,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false
@@ -398,7 +380,7 @@ index 44cf447..3fa2094 100755
  	widget.state = UiScreen.WIDGET_STATE.NORMAL
  	return widget
 diff --git a/ui_screeen/ui_screeen.tscn b/ui_screeen/ui_screeen.tscn
-index 6e6e258..e029539 100755
+index 6e6e258..749d9ec 100755
 --- a/ui_screeen/ui_screeen.tscn
 +++ b/ui_screeen/ui_screeen.tscn
 @@ -1,6 +1,7 @@
@@ -410,7 +392,7 @@ index 6e6e258..e029539 100755
  
  [node name="UiScreeen" type="Control" unique_id=1960177141]
  layout_mode = 3
-@@ -10,3 +11,26 @@ anchor_bottom = 1.0
+@@ -10,3 +11,11 @@ anchor_bottom = 1.0
  grow_horizontal = 2
  grow_vertical = 2
  script = ExtResource("1_xb4ee")
@@ -422,18 +404,3 @@ index 6e6e258..e029539 100755
 +anchor_bottom = 1.0
 +grow_horizontal = 2
 +grow_vertical = 2
-+
-+[node name="Box" type="Control" parent="RatioToggle/Free"]
-+layout_mode = 1
-+anchors_preset = 15
-+anchor_right = 1.0
-+anchor_bottom = 1.0
-+grow_horizontal = 2
-+grow_vertical = 2
-+mouse_filter = 2
-+
-+[node name="VirtualRoot" type="Control" parent="RatioToggle/Free/Box"]
-+layout_mode = 0
-+mouse_filter = 2
-+
-+[editable path="RatioToggle"]
