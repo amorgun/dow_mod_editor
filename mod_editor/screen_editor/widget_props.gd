@@ -55,7 +55,10 @@ func sync_display() -> void:
 			else:
 				row.setup(null, false, own.get(key, style.get(key)), key in own or key in style, false)
 			row.changed.connect(func (k: String, value: Variant): prop_changed.emit(k, value))
-			row.add_requested.connect(func (k: String): prop_changed.emit(k, ScreenPropDefs.default_value(descriptor)))
+			row.add_requested.connect(func (k: String):
+				var val = style.get(k, null) if k in style else ScreenPropDefs.default_value(descriptor)
+				prop_changed.emit(k, val.duplicate(true) if val is Dictionary or val is Array else val)
+			)
 			row.override_requested.connect(func (k: String):
 				var val = style.get(k)
 				prop_changed.emit(k, val.duplicate(true) if val is Dictionary or val is Array else val)

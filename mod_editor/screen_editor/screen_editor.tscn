@@ -58,6 +58,15 @@ text = "View"
 layout_mode = 2
 size_flags_horizontal = 8
 
+[node name="ScreenLabel" type="Label" parent="VBoxContainer/TopBar" unique_id=1342771013]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Screen"
+
+[node name="ScreenRatio" type="OptionButton" parent="VBoxContainer/TopBar" unique_id=1342771014]
+layout_mode = 2
+size_flags_horizontal = 8
+
 [node name="SnapCheck" type="CheckBox" parent="VBoxContainer/TopBar" unique_id=1342771011]
 layout_mode = 2
 size_flags_horizontal = 8
@@ -246,6 +255,7 @@ metadata/_tab_index = 3
 [connection signal="item_selected" from="VBoxContainer/TopBar/Mode" to="." method="_on_mode_selected"]
 [connection signal="pressed" from="VBoxContainer/TopBar/ResetView" to="." method="_on_reset_view_pressed"]
 [connection signal="item_selected" from="VBoxContainer/TopBar/ViewRatio" to="." method="_on_view_ratio_selected"]
+[connection signal="item_selected" from="VBoxContainer/TopBar/ScreenRatio" to="." method="_on_screen_ratio_selected"]
 [connection signal="toggled" from="VBoxContainer/TopBar/SnapCheck" to="." method="_on_snap_toggled"]
 [connection signal="value_changed" from="VBoxContainer/TopBar/SnapStep" to="." method="_on_snap_step_changed"]
 [connection signal="guide_dragged" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/GuideLines" to="." method="_on_guide_dragged"]

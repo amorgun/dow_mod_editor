@@ -12,6 +12,7 @@ enum ViewMode {
 @onready var selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection
 @onready var item_selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection
 @onready var view_ratio_option: OptionButton = $VBoxContainer/TopBar/ViewRatio
+@onready var screen_ratio_option: OptionButton = $VBoxContainer/TopBar/ScreenRatio
 @onready var guide_lines: GuideLines = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/GuideLines
 @onready var widget_props: WidgetProps = $VBoxContainer/Columns/Sidebar
 @onready var mode_option: OptionButton = $VBoxContainer/TopBar/Mode
@@ -53,6 +54,9 @@ func _ready() -> void:
 			_view_ratios.append(SafeDict.new(item))
 			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
 	view_ratio_option.add_item("Responsive")
+	screen_ratio_option.add_item("Default")
+	for ratio in _view_ratios:
+		screen_ratio_option.add_item(ratio.get_str("name", "?"))
 	ui_screen.default_ratio = view_config.get_value("aspect_ratio", 4.0 / 3, TYPE_FLOAT)
 	snap_step_spin.value = view_config.get_value("snap_step", 8.0, TYPE_FLOAT)
 	guide_lines.grab_margin = view_config.get_value("guide_grab_margin", 4.0, TYPE_FLOAT)
@@ -141,6 +145,7 @@ func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo
 			_create_tree_items(c, root)
 	view_ratio_option.select(0)
 	_on_view_ratio_selected(0)
+	_sync_screen_ratio_option()
 	selection.visible = false
 	item_selection.visible = false
 	selected_widget = null
@@ -148,6 +153,8 @@ func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo
 	widget_props.set_widget(null, true)
 	undo_redo.clear_history()
 	_pick_stack = []
+	if ui_screen.main_widget != null:
+		_select_row(ui_screen.main_widget)
 
 func _create_tree_items(node: UiScreen.Widget, root: TreeItem, slot: int = -1, style_owned: bool = false, do_recursive: bool = true) -> void:
 	var it := element_tree.create_widget_node(node, root, slot, style_owned)
@@ -614,9 +621,50 @@ func _on_view_ratio_selected(index: int) -> void:
 		editor_ratio.ratio = _view_ratios[index].get_typed("value", 4.0 / 3, TYPE_FLOAT)
 	editor_ratio.fixed = fixed
 	ui_screen.set_fixed_ratio(fixed)
+	call_deferred("_refresh_selection_gizmos")
+
+## Ratio containers refit children on the next layout pass; re-anchoring the
+## gizmos must wait for it or they capture stale rects.
+func _refresh_selection_gizmos() -> void:
 	if selected_widget != null:
 		_on_select_widget(selected_widget)
 		_update_item_gizmo()
+
+## The screen's own AspectRatio data value; 0 (Default) means no data value.
+func _on_screen_ratio_selected(index: int) -> void:
+	if index > len(_view_ratios):
+		return
+	var new_ratio: float = 0.0 if index == 0 else _view_ratios[index - 1].get_typed("value", 4.0 / 3, TYPE_FLOAT)
+	var old_ratio: float = ui_screen.aspect_ratio
+	if is_equal_approx(new_ratio, old_ratio):
+		return
+	undo_redo.create_action("Set screen ratio")
+	undo_redo.add_do_method(func (): _apply_screen_ratio(new_ratio))
+	undo_redo.add_undo_method(func (): _apply_screen_ratio(old_ratio))
+	undo_redo.commit_action()
+
+func _apply_screen_ratio(ratio: float) -> void:
+	ui_screen.aspect_ratio = ratio
+	ui_screen.set_fixed_ratio(editor_ratio.fixed)
+	_sync_screen_ratio_option()
+	call_deferred("_refresh_selection_gizmos")
+
+## Reflects ui_screen.aspect_ratio in the dropdown; data values outside the
+## config list get a trailing custom item.
+func _sync_screen_ratio_option() -> void:
+	var base_count := 1 + len(_view_ratios)
+	while screen_ratio_option.item_count > base_count:
+		screen_ratio_option.remove_item(screen_ratio_option.item_count - 1)
+	var ratio: float = ui_screen.aspect_ratio
+	if ratio <= 0.0:
+		screen_ratio_option.select(0)
+		return
+	for i in len(_view_ratios):
+		if is_equal_approx(_view_ratios[i].get_typed("value", 0.0, TYPE_FLOAT), ratio):
+			screen_ratio_option.select(i + 1)
+			return
+	screen_ratio_option.add_item("%.3f" % ratio)
+	screen_ratio_option.select(base_count)
 
 ## Picking is on the right button: the left button belongs to the gizmo.
 func _on_canvas_gui_input(event: InputEvent) -> void:

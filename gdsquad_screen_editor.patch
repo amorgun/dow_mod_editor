@@ -192,10 +192,10 @@ index 5b28907..8a5d20d 100755
  				parts.append(newline)
 diff --git a/togglable_aspect_ratio_container.gd b/togglable_aspect_ratio_container.gd
 new file mode 100755
-index 0000000..609b132
+index 0000000..11e6148
 --- /dev/null
 +++ b/togglable_aspect_ratio_container.gd
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,42 @@
 +## Two-root aspect toggle: content lives under $Free (responsive, parent-sized)
 +## or $Fixed (an AspectRatioContainer with visible overflow); toggling `fixed`
 +## reparents the content, keeping node identity. Hosts attach children under
@@ -222,8 +222,10 @@ index 0000000..609b132
 +		if is_node_ready():
 +			_sync()
 +
++## Content sits in a plain Control the ratio container fits, so children keep
++## fractional-anchor freedom instead of being laid out by the Container.
 +var content_root: Control:
-+	get: return $Fixed if fixed else $Free
++	get: return $Fixed/Content if fixed else $Free
 +
 +func _ready() -> void:
 +	$Fixed.ratio = ratio
@@ -232,16 +234,16 @@ index 0000000..609b132
 +
 +func _sync() -> void:
 +	var target := content_root
-+	var other: Control = $Free if fixed else $Fixed
++	var other: Control = $Free if fixed else $Fixed/Content
 +	for c in other.get_children():
 +		other.remove_child(c)
 +		target.add_child(c)
 diff --git a/togglable_aspect_ratio_container.tscn b/togglable_aspect_ratio_container.tscn
 new file mode 100755
-index 0000000..a37e305
+index 0000000..176f0ed
 --- /dev/null
 +++ b/togglable_aspect_ratio_container.tscn
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,34 @@
 +[gd_scene load_steps=2 format=3 uid="uid://dtogglearatio1"]
 +
 +[ext_resource type="Script" path="res://addons/gdsquad/togglable_aspect_ratio_container.gd" id="1_tarc"]
@@ -264,6 +266,10 @@ index 0000000..a37e305
 +grow_vertical = 2
 +mouse_filter = 2
 +
++[node name="Content" type="Control" parent="Fixed"]
++layout_mode = 2
++mouse_filter = 2
++
 +[node name="Free" type="Control" parent="."]
 +layout_mode = 1
 +anchors_preset = 15
@@ -273,7 +279,7 @@ index 0000000..a37e305
 +grow_vertical = 2
 +mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..337a6d2 100755
+index 44cf447..e075af3 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
 @@ -1,7 +1,24 @@
@@ -301,10 +307,11 @@ index 44cf447..337a6d2 100755
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -82,6 +99,15 @@ class Widget extends Control:
+@@ -82,12 +99,28 @@ class Widget extends Control:
  				c.visible = c.states & val
  			state = val
  	var hitbox: Control = null
+-
 +	## HitArea rectangles, as fractions of the widget rect.
 +	var hit_rects: Array[Rect2] = []
 +
@@ -314,10 +321,23 @@ index 44cf447..337a6d2 100755
 +			if Rect2(rect.position + hr.position * rect.size, hr.size * rect.size).has_point(point):
 +				return true
 +		return false
- 
++
++	## Offsets must be zeroed: a Container parent (fixed-ratio root) lays
++	## children out via top-left anchors + offset rects, and stale offsets
++	## on top of fractional anchors double the resulting rect.
  	static func _set_anchors(node: Control, pos: Vector2, size: Vector2) -> void:
  		node.anchor_left = pos.x
-@@ -109,26 +135,7 @@ class Widget extends Control:
+ 		node.anchor_top = pos.y
+ 		node.anchor_right = node.anchor_left + size.x
+ 		node.anchor_bottom = node.anchor_top + size.y
++		node.offset_left = 0
++		node.offset_top = 0
++		node.offset_right = 0
++		node.offset_bottom = 0
+ 
+ 	func _init() -> void:
+ 		mouse_filter = Control.MOUSE_FILTER_PASS
+@@ -109,26 +142,7 @@ class Widget extends Control:
  		add_child(children_root)
  		hitbox = Control.new()
  		hitbox.name = "HitBox"
@@ -345,7 +365,7 @@ index 44cf447..337a6d2 100755
  
  	func _get_style_config_raw() -> Dictionary:
  		var style_id := config.get_array("style")
-@@ -151,26 +158,24 @@ class Widget extends Control:
+@@ -151,26 +165,24 @@ class Widget extends Control:
  		#res.mouse_filter = Control.MOUSE_FILTER_PASS
  		match type:
  			"Graphic":
@@ -389,7 +409,7 @@ index 44cf447..337a6d2 100755
  				res.add_child(node)
  			"Text":
  				var node := Label.new()
-@@ -234,6 +239,7 @@ class Widget extends Control:
+@@ -234,6 +246,7 @@ class Widget extends Control:
  				res.add_child(node)
  		for c in res.get_children():
  			c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -397,7 +417,7 @@ index 44cf447..337a6d2 100755
  		for s in config.get_array("states"):
  			res.states |= {
  				"Normal": UiScreen.WIDGET_STATE.NORMAL,
-@@ -274,9 +280,10 @@ class Widget extends Control:
+@@ -274,9 +287,10 @@ class Widget extends Control:
  
  		_set_anchors(self, relative_pos, relative_size)
  
@@ -411,7 +431,7 @@ index 44cf447..337a6d2 100755
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
  		var node_text := effective_config.get_str("text")
-@@ -288,6 +295,8 @@ class Widget extends Control:
+@@ -288,6 +302,8 @@ class Widget extends Control:
  		var presentation := effective_config.get_dict("Presentation")
  		for c in presentation.get_safe_array("Art"):
  			_add_art_item(c, node_text)
@@ -420,7 +440,7 @@ index 44cf447..337a6d2 100755
  
  	func get_widget_slot(slot: Slot, type: SlotType) -> Widget:
  		var root := slot_roots[slot].get_child(type)
-@@ -306,9 +315,6 @@ class Widget extends Control:
+@@ -306,9 +322,6 @@ class Widget extends Control:
  class Art extends Control:
  	var states: WIDGET_STATE = 0
  
@@ -430,7 +450,7 @@ index 44cf447..337a6d2 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +426,77 @@ class GraphicArt extends Art:
+@@ -420,8 +433,77 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
@@ -508,7 +528,7 @@ index 44cf447..337a6d2 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +505,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +512,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -517,7 +537,7 @@ index 44cf447..337a6d2 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +517,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +524,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -525,7 +545,7 @@ index 44cf447..337a6d2 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +525,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +532,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false

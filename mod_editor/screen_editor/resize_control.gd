@@ -20,6 +20,8 @@ enum ResizeEdge {
 @export var min_window_size: Vector2 = Vector2(50, 50)
 ## Snap grid step in parent-space pixels; 0 disables snapping.
 @export var snap_step: float = 0.0
+## Accumulated motion below this many px is a click, not a drag/resize.
+@export var drag_threshold: float = 4.0
 
 ## Parent-space x positions of vertical guide lines; within snap_step they win over the grid.
 var snap_lines_x: Array[float] = []
@@ -34,6 +36,7 @@ var _is_resizing: bool = false
 var _resize_dir: int = ResizeEdge.NONE
 var _start_rect := Rect2()
 var _acc := Vector2.ZERO
+var _past_threshold := false
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
@@ -45,6 +48,7 @@ func _gui_input(event: InputEvent) -> void:
 			if event.pressed:
 				_start_rect = Rect2(position, size)
 				_acc = Vector2.ZERO
+				_past_threshold = false
 				var dir := _get_resize_direction(event.position)
 				if dir != ResizeEdge.NONE:
 					_is_resizing = true
@@ -60,9 +64,7 @@ func _gui_input(event: InputEvent) -> void:
 				cancel_interaction()
 
 	elif event is InputEventMouseMotion:
-		if not _is_dragging and not _is_resizing:
-			_update_mouse_cursor(_get_resize_direction(event.position))
-		elif _is_dragging:
+		if _is_dragging:
 			_handle_drag(event.relative)
 			accept_event()
 		elif _is_resizing:
@@ -79,7 +81,9 @@ func cancel_interaction() -> void:
 		_resize_dir = ResizeEdge.NONE
 		resize_ended.emit()
 
-	mouse_default_cursor_shape = Control.CURSOR_ARROW
+## The resize band extends grab_margin outside the box as well.
+func _has_point(point: Vector2) -> bool:
+	return Rect2(Vector2.ZERO, size).grow(grab_margin).has_point(point)
 
 func _get_resize_direction(local_mouse_pos: Vector2) -> int:
 	var dir: int = ResizeEdge.NONE
@@ -126,8 +130,15 @@ func _snap_span(lead: float, span: float, lines: Array[float], origin: float) ->
 	var by_trail := origin + snappedf(lead + span - origin, snap_step) - span
 	return by_trail if absf(by_trail - lead) < absf(by_lead - lead) else by_lead
 
-func _handle_drag(relative_motion: Vector2) -> void:
+func _past_drag_threshold(relative_motion: Vector2) -> bool:
 	_acc += relative_motion
+	if not _past_threshold and _acc.length() >= drag_threshold:
+		_past_threshold = true
+	return _past_threshold
+
+func _handle_drag(relative_motion: Vector2) -> void:
+	if not _past_drag_threshold(relative_motion):
+		return
 	var target := _start_rect.position + _acc
 	position = Vector2(
 		_snap_span(target.x, _start_rect.size.x, snap_lines_x, snap_origin.x),
@@ -135,7 +146,8 @@ func _handle_drag(relative_motion: Vector2) -> void:
 	interactive_dragged.emit(position)
 
 func _handle_resize(relative_motion: Vector2) -> void:
-	_acc += relative_motion
+	if not _past_drag_threshold(relative_motion):
+		return
 	var rect := _start_rect
 
 	if _resize_dir & ResizeEdge.RIGHT:
@@ -159,19 +171,3 @@ func _handle_resize(relative_motion: Vector2) -> void:
 	position = rect.position
 	size = rect.size
 	interactive_resized.emit(size)
-
-func _update_mouse_cursor(dir: int) -> void:
-	var target_shape: Control.CursorShape = Control.CURSOR_ARROW
-
-	if dir == (ResizeEdge.TOP | ResizeEdge.LEFT) or dir == (ResizeEdge.BOTTOM | ResizeEdge.RIGHT):
-		target_shape = Control.CURSOR_FDIAGSIZE
-	elif dir == (ResizeEdge.TOP | ResizeEdge.RIGHT) or dir == (ResizeEdge.BOTTOM | ResizeEdge.LEFT):
-		target_shape = Control.CURSOR_BDIAGSIZE
-	elif (dir & ResizeEdge.LEFT) != 0 or (dir & ResizeEdge.RIGHT) != 0:
-		target_shape = Control.CURSOR_HSIZE
-	elif (dir & ResizeEdge.TOP) != 0 or (dir & ResizeEdge.BOTTOM) != 0:
-		target_shape = Control.CURSOR_VSIZE
-	else:
-		target_shape = Control.CURSOR_ARROW
-	if mouse_default_cursor_shape != target_shape:
-		mouse_default_cursor_shape = target_shape
