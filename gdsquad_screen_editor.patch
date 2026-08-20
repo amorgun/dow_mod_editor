@@ -1,3 +1,33 @@
+diff --git a/formats/screen.gd b/formats/screen.gd
+index 532d3a9..68b92c4 100755
+--- a/formats/screen.gd
++++ b/formats/screen.gd
+@@ -2,6 +2,7 @@ class_name ScreenParser
+ 
+ var config_root: Lua = null
+ var parse_error = ""
++var aspect_ratio := 0.0
+ var mod: ModResourceLoader = null
+ var common_colors: Dictionary[String, Color] = {}
+ var common_styles: Dictionary[String, Dictionary] = {}
+@@ -54,6 +55,7 @@ func load(text: String) -> bool:
+ 	if config_root.dostring(text) != Error.OK:
+ 		parse_error = config_root.get_error()
+ 		return false
++	aspect_ratio = SafeDict.new(config_root.get_value("ScreenInfo", {}, TYPE_DICTIONARY)).get_typed("AspectRatio", 0.0, TYPE_FLOAT)
+ 	var info_root: Dictionary = config_root.get_value("ToolInfo", {}, TYPE_DICTIONARY)
+ 	var info_config := SafeDict.new(info_root)
+ 	var widget_info_config := info_config.get_safe_array("WidgetInfo")
+@@ -73,6 +75,7 @@ func setup_view(root: UiScreen) -> void:
+ 	var screen_config := SafeDict.new(screen_root)
+ 	var widgets_config := screen_config.get_dict("Widgets")
+ 
++	root.aspect_ratio = aspect_ratio
+ 	var widgets_root := root.build_widget_from_config(widgets_config)
+-	root.add_child(widgets_root)
+-	root.add_child(widgets_root.hitbox)
++	root.widget_root.add_child(widgets_root)
++	root.widget_root.add_child(widgets_root.hitbox)
 diff --git a/safe_dict.gd b/safe_dict.gd
 index 19aeace..3ec26d2 100755
 --- a/safe_dict.gd
@@ -14,22 +44,103 @@ index 19aeace..3ec26d2 100755
 +
  func duplicate(deep: bool = false) -> SafeDict:
  	return SafeDict.new(_data.duplicate(deep))
+diff --git a/togglable_aspect_ratio_container.gd b/togglable_aspect_ratio_container.gd
+new file mode 100755
+index 0000000..b990fd4
+--- /dev/null
++++ b/togglable_aspect_ratio_container.gd
+@@ -0,0 +1,31 @@
++## Two-root aspect toggle: content lives under $Free (responsive, parent-sized)
++## or $Fixed (an AspectRatioContainer with visible overflow); toggling `fixed`
++## reparents the content, keeping node identity. Hosts attach children under
++## $Free in their scenes.
++class_name TogglableAspectRatioContainer extends Control
++
++@export var ratio := 4.0 / 3:
++	set(val):
++		ratio = val
++		if is_node_ready():
++			$Fixed.ratio = val
++
++@export var fixed := false:
++	set(val):
++		fixed = val
++		if is_node_ready():
++			_sync()
++
++var content_root: Control:
++	get: return $Fixed if fixed else $Free
++
++func _ready() -> void:
++	$Fixed.ratio = ratio
++	_sync()
++
++func _sync() -> void:
++	var target := content_root
++	var other: Control = $Free if fixed else $Fixed
++	for c in other.get_children():
++		other.remove_child(c)
++		target.add_child(c)
+diff --git a/togglable_aspect_ratio_container.tscn b/togglable_aspect_ratio_container.tscn
+new file mode 100755
+index 0000000..a37e305
+--- /dev/null
++++ b/togglable_aspect_ratio_container.tscn
+@@ -0,0 +1,30 @@
++[gd_scene load_steps=2 format=3 uid="uid://dtogglearatio1"]
++
++[ext_resource type="Script" path="res://addons/gdsquad/togglable_aspect_ratio_container.gd" id="1_tarc"]
++
++[node name="TogglableAspectRatio" type="Control"]
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++mouse_filter = 2
++script = ExtResource("1_tarc")
++
++[node name="Fixed" type="AspectRatioContainer" parent="."]
++layout_mode = 1
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++mouse_filter = 2
++
++[node name="Free" type="Control" parent="."]
++layout_mode = 1
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2
++mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..d6d2b86 100755
+index 44cf447..fa0d821 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
-@@ -1,7 +1,10 @@
+@@ -1,7 +1,18 @@
  class_name UiScreen extends Control
  
 +## Manual event routing: the top-most widget whose HitArea matches gets the event.
  var is_interactive := true
  
++## The screen's own aspect ratio; set when the screen data changes.
++var aspect_ratio := 0.0
++## Widgets mount here: $RatioToggle's active root (fixed-ratio or responsive).
++var widget_root: Control:
++	get: return $RatioToggle.content_root
++
++static var _default_ratio := 0.0
++
 +var _hover_widget: Widget = null
 +
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -82,6 +85,15 @@ class Widget extends Control:
+@@ -82,6 +93,15 @@ class Widget extends Control:
  				c.visible = c.states & val
  			state = val
  	var hitbox: Control = null
@@ -45,7 +156,7 @@ index 44cf447..d6d2b86 100755
  
  	static func _set_anchors(node: Control, pos: Vector2, size: Vector2) -> void:
  		node.anchor_left = pos.x
-@@ -109,26 +121,7 @@ class Widget extends Control:
+@@ -109,26 +129,7 @@ class Widget extends Control:
  		add_child(children_root)
  		hitbox = Control.new()
  		hitbox.name = "HitBox"
@@ -73,7 +184,7 @@ index 44cf447..d6d2b86 100755
  
  	func _get_style_config_raw() -> Dictionary:
  		var style_id := config.get_array("style")
-@@ -151,26 +144,24 @@ class Widget extends Control:
+@@ -151,26 +152,24 @@ class Widget extends Control:
  		#res.mouse_filter = Control.MOUSE_FILTER_PASS
  		match type:
  			"Graphic":
@@ -117,7 +228,7 @@ index 44cf447..d6d2b86 100755
  				res.add_child(node)
  			"Text":
  				var node := Label.new()
-@@ -234,6 +225,7 @@ class Widget extends Control:
+@@ -234,6 +233,7 @@ class Widget extends Control:
  				res.add_child(node)
  		for c in res.get_children():
  			c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -125,7 +236,7 @@ index 44cf447..d6d2b86 100755
  		for s in config.get_array("states"):
  			res.states |= {
  				"Normal": UiScreen.WIDGET_STATE.NORMAL,
-@@ -274,9 +266,10 @@ class Widget extends Control:
+@@ -274,9 +274,10 @@ class Widget extends Control:
  
  		_set_anchors(self, relative_pos, relative_size)
  
@@ -139,7 +250,7 @@ index 44cf447..d6d2b86 100755
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
  		var node_text := effective_config.get_str("text")
-@@ -288,6 +281,8 @@ class Widget extends Control:
+@@ -288,6 +289,8 @@ class Widget extends Control:
  		var presentation := effective_config.get_dict("Presentation")
  		for c in presentation.get_safe_array("Art"):
  			_add_art_item(c, node_text)
@@ -148,7 +259,7 @@ index 44cf447..d6d2b86 100755
  
  	func get_widget_slot(slot: Slot, type: SlotType) -> Widget:
  		var root := slot_roots[slot].get_child(type)
-@@ -306,9 +301,6 @@ class Widget extends Control:
+@@ -306,9 +309,6 @@ class Widget extends Control:
  class Art extends Control:
  	var states: WIDGET_STATE = 0
  
@@ -158,14 +269,22 @@ index 44cf447..d6d2b86 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +412,65 @@ class GraphicArt extends Art:
+@@ -420,8 +420,73 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
++## Fixed keeps the screen's ratio (data value, else the editor-data config
++## default) with visible overflow; responsive fills the parent.
++func set_fixed_ratio(fixed: bool) -> void:
++	if _default_ratio == 0.0:
++		_default_ratio = Settings.data.pload_lua("data:screen_editor.lua").get_value("aspect_ratio", 4.0 / 3, TYPE_FLOAT)
++	$RatioToggle.ratio = aspect_ratio if aspect_ratio > 0 else _default_ratio
++	$RatioToggle.fixed = fixed
++
 +## All widgets whose HitArea contains the global point, top-most first.
 +func widgets_at(point: Vector2) -> Array[Widget]:
 +	var res: Array[Widget] = []
-+	for c in get_children():
++	for c in widget_root.get_children():
 +		if c is Widget:
 +			_collect_hits(c, point, res)
 +	res.reverse()
@@ -224,7 +343,7 @@ index 44cf447..d6d2b86 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +479,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +495,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -233,7 +352,7 @@ index 44cf447..d6d2b86 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +491,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +507,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -241,7 +360,7 @@ index 44cf447..d6d2b86 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +499,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +515,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false
@@ -251,3 +370,28 @@ index 44cf447..d6d2b86 100755
 +		widget.visible = not widgets_info[widget_name].get_bool("hidden", false)
  	widget.state = UiScreen.WIDGET_STATE.NORMAL
  	return widget
+diff --git a/ui_screeen/ui_screeen.tscn b/ui_screeen/ui_screeen.tscn
+index 6e6e258..749d9ec 100755
+--- a/ui_screeen/ui_screeen.tscn
++++ b/ui_screeen/ui_screeen.tscn
+@@ -1,6 +1,7 @@
+-[gd_scene format=3 uid="uid://4i6xby07543s"]
++[gd_scene load_steps=3 format=3 uid="uid://4i6xby07543s"]
+ 
+ [ext_resource type="Script" uid="uid://bqo4pkfdjoms3" path="res://addons/gdsquad/ui_screeen/ui_screeen.gd" id="1_xb4ee"]
++[ext_resource type="PackedScene" path="res://addons/gdsquad/togglable_aspect_ratio_container.tscn" id="2_tarc"]
+ 
+ [node name="UiScreeen" type="Control" unique_id=1960177141]
+ layout_mode = 3
+@@ -10,3 +11,11 @@ anchor_bottom = 1.0
+ grow_horizontal = 2
+ grow_vertical = 2
+ script = ExtResource("1_xb4ee")
++
++[node name="RatioToggle" parent="." instance=ExtResource("2_tarc")]
++layout_mode = 1
++anchors_preset = 15
++anchor_right = 1.0
++anchor_bottom = 1.0
++grow_horizontal = 2
++grow_vertical = 2

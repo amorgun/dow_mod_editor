@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://bxc5d7bvsexd8" path="res://mod_editor/screen_editor/widget_props.gd" id="5_1uylo"]
 [ext_resource type="Script" path="res://mod_editor/screen_editor/item_list_tab.gd" id="6_itemt"]
 [ext_resource type="PackedScene" path="res://mod_editor/scenes/pan_zoom_view.tscn" id="7_pnzm"]
+[ext_resource type="PackedScene" path="res://addons/gdsquad/togglable_aspect_ratio_container.tscn" id="8_tarc"]
 
 [node name="ScreenEditor" type="Panel" unique_id=2138810329]
 anchors_preset = 15
@@ -49,6 +50,15 @@ popup/item_1/id = 1
 popup/item_2/text = "Navigate"
 popup/item_2/id = 2
 
+[node name="ViewLabel" type="Label" parent="VBoxContainer/TopBar" unique_id=1342771009]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "View"
+
+[node name="ViewRatio" type="OptionButton" parent="VBoxContainer/TopBar" unique_id=1342771010]
+layout_mode = 2
+size_flags_horizontal = 8
+
 [node name="ResetView" type="Button" parent="VBoxContainer/TopBar" unique_id=1342771008]
 layout_mode = 2
 size_flags_horizontal = 8
@@ -83,11 +93,28 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="UiScreeen" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport" unique_id=1960177141 instance=ExtResource("2_kcmre")]
+[node name="EditorRatio" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport" unique_id=1960177142 instance=ExtResource("8_tarc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Canvas" type="Control" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free" unique_id=1960177143]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="UiScreeen" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas" unique_id=1960177141 instance=ExtResource("2_kcmre")]
 layout_mode = 1
 mouse_filter = 1
 
-[node name="WidgetSelection" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport" unique_id=1919164788 instance=ExtResource("4_wpf1w")]
+[node name="WidgetSelection" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas" unique_id=1919164788 instance=ExtResource("4_wpf1w")]
 visible = false
 layout_mode = 1
 anchors_preset = 0
@@ -99,7 +126,7 @@ grow_horizontal = 1
 grow_vertical = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="ReferenceRect" type="ReferenceRect" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection" unique_id=1114269453]
+[node name="ReferenceRect" type="ReferenceRect" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection" unique_id=1114269453]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -111,7 +138,7 @@ border_color = Color(0.7973681, 0.3598562, 0.19433784, 1)
 border_width = 3.0
 editor_only = false
 
-[node name="ItemSelection" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport" unique_id=1919164789 instance=ExtResource("4_wpf1w")]
+[node name="ItemSelection" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas" unique_id=1919164789 instance=ExtResource("4_wpf1w")]
 visible = false
 layout_mode = 1
 anchors_preset = 0
@@ -123,7 +150,7 @@ grow_horizontal = 1
 grow_vertical = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="ReferenceRect" type="ReferenceRect" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/ItemSelection" unique_id=1114269454]
+[node name="ReferenceRect" type="ReferenceRect" parent="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection" unique_id=1114269454]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -167,6 +194,7 @@ metadata/_tab_index = 2
 [connection signal="pressed" from="VBoxContainer/TopBar/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="item_selected" from="VBoxContainer/TopBar/Mode" to="." method="_on_mode_selected"]
 [connection signal="pressed" from="VBoxContainer/TopBar/ResetView" to="." method="_on_reset_view_pressed"]
+[connection signal="item_selected" from="VBoxContainer/TopBar/ViewRatio" to="." method="_on_view_ratio_selected"]
 [connection signal="button_clicked" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_button_clicked"]
 [connection signal="item_activated" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_activated"]
 [connection signal="item_edited" from="VBoxContainer/Columns/ElementTree" to="VBoxContainer/Columns/ElementTree" method="_on_item_edited"]
@@ -176,12 +204,12 @@ metadata/_tab_index = 2
 [connection signal="paste_requested" from="VBoxContainer/Columns/ElementTree" to="." method="_on_paste_widget"]
 [connection signal="delete_requested" from="VBoxContainer/Columns/ElementTree" to="." method="_on_delete_widget"]
 [connection signal="gui_input" from="VBoxContainer/Columns/Preview/PanZoom" to="." method="_on_canvas_gui_input"]
-[connection signal="drag_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection" to="." method="_on_widget_selection_edit_ended"]
-[connection signal="interactive_dragged" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection" to="." method="_on_widget_select_update"]
-[connection signal="interactive_resized" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection" to="." method="_on_widget_select_update"]
-[connection signal="resize_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection" to="." method="_on_widget_selection_edit_ended"]
-[connection signal="drag_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/ItemSelection" to="." method="_on_item_selection_edit_ended"]
-[connection signal="resize_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/ItemSelection" to="." method="_on_item_selection_edit_ended"]
+[connection signal="drag_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection" to="." method="_on_widget_selection_edit_ended"]
+[connection signal="interactive_dragged" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection" to="." method="_on_widget_select_update"]
+[connection signal="interactive_resized" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection" to="." method="_on_widget_select_update"]
+[connection signal="resize_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection" to="." method="_on_widget_selection_edit_ended"]
+[connection signal="drag_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection" to="." method="_on_item_selection_edit_ended"]
+[connection signal="resize_ended" from="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection" to="." method="_on_item_selection_edit_ended"]
 [connection signal="tab_changed" from="VBoxContainer/Columns/Sidebar" to="." method="_on_sidebar_tab_changed"]
 [connection signal="prop_changed" from="VBoxContainer/Columns/Sidebar" to="." method="_on_prop_changed"]
 [connection signal="prop_removed" from="VBoxContainer/Columns/Sidebar" to="." method="_on_prop_removed"]
@@ -189,3 +217,4 @@ metadata/_tab_index = 2
 [connection signal="slot_selected" from="VBoxContainer/Columns/Sidebar" to="." method="_on_slot_selected"]
 
 [editable path="VBoxContainer/Columns/Preview/PanZoom"]
+[editable path="VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio"]

@@ -7,10 +7,12 @@ enum ViewMode {
 }
 
 @onready var pan_zoom: PanZoomView = $VBoxContainer/Columns/Preview/PanZoom
-@onready var ui_screen: UiScreen = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/UiScreeen
+@onready var editor_ratio: TogglableAspectRatioContainer = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio
+@onready var ui_screen: UiScreen = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/UiScreeen
 @onready var element_tree: WidgetTree = $VBoxContainer/Columns/ElementTree
-@onready var selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/WidgetSelection
-@onready var item_selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/ItemSelection
+@onready var selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/WidgetSelection
+@onready var item_selection: ResizerControl = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/ItemSelection
+@onready var view_ratio_option: OptionButton = $VBoxContainer/TopBar/ViewRatio
 @onready var widget_props: WidgetProps = $VBoxContainer/Columns/Sidebar
 @onready var mode_option: OptionButton = $VBoxContainer/TopBar/Mode
 
@@ -29,8 +31,16 @@ signal close
 func _on_close_button_pressed() -> void:
 	close.emit()
 
+var _view_ratios: Array = []
+
 func _ready() -> void:
 	element_tree.undo_redo = undo_redo
+	var view_config := Settings.data.pload_lua("data:screen_editor.lua")
+	for item in view_config.get_value("preview_ratios", [], TYPE_ARRAY):
+		if item is Dictionary:
+			_view_ratios.append(SafeDict.new(item))
+			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
+	view_ratio_option.add_item("Responsive")
 	for tab in [widget_props.art_tab, widget_props.hit_tab]:
 		tab.item_selected.connect(_on_item_selected.bind(tab))
 		tab.item_prop_changed.connect(_on_item_prop_changed.bind(tab))
@@ -77,8 +87,8 @@ func _input(event: InputEvent) -> void:
 				_on_delete_widget(selected_widget, element_tree.get_selected())
 
 func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo) -> void:
-	for c in ui_screen.get_children():
-		ui_screen.remove_child(c)
+	for c in ui_screen.widget_root.get_children():
+		ui_screen.widget_root.remove_child(c)
 		c.queue_free()
 	var parser := ScreenParser.new(loader)
 	parser.load_common_data()
@@ -89,9 +99,11 @@ func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo
 	PropRow.mod_info = mod_info
 	element_tree.clear()
 	var root := element_tree.create_item()
-	for c in ui_screen.get_children():
+	for c in ui_screen.widget_root.get_children():
 		if c is UiScreen.Widget:
 			_create_tree_items(c, root)
+	view_ratio_option.select(0)
+	_on_view_ratio_selected(0)
 	selection.visible = false
 	item_selection.visible = false
 	selected_widget = null
@@ -137,7 +149,7 @@ static func slot_of(widget: UiScreen.Widget) -> int:
 	return -1
 
 static func collect_names(screen: UiScreen, taken: Dictionary = {}) -> Dictionary:
-	for c in screen.get_children():
+	for c in screen.widget_root.get_children():
 		if c is UiScreen.Widget:
 			_collect_widget_names(c, taken)
 	return taken
@@ -501,6 +513,18 @@ func _on_mode_selected(index: int) -> void:
 
 func _on_reset_view_pressed() -> void:
 	pan_zoom.reset()
+
+## The selected display shape drives the editor container; the screen keeps
+## its own data/default ratio inside it. Last option is Responsive.
+func _on_view_ratio_selected(index: int) -> void:
+	var fixed := index < len(_view_ratios)
+	if fixed:
+		editor_ratio.ratio = _view_ratios[index].get_typed("value", 4.0 / 3, TYPE_FLOAT)
+	editor_ratio.fixed = fixed
+	ui_screen.set_fixed_ratio(fixed)
+	if selected_widget != null:
+		_on_select_widget(selected_widget)
+		_update_item_gizmo()
 
 ## Picking is on the right button: the left button belongs to the gizmo.
 func _on_canvas_gui_input(event: InputEvent) -> void:

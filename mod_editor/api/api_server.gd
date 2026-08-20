@@ -46,12 +46,20 @@ func is_tcp_api_running() -> bool:
 var port: int:
 	get: return _tcp_api.port if _tcp_api != null else 0
 
+## Optional gitignored debug hooks (mod_editor/api/debug_api.gd); absent in
+## clean checkouts and exports.
+var _debug: RefCounted = load("res://mod_editor/api/debug_api.gd").new() if ResourceLoader.exists("res://mod_editor/api/debug_api.gd") else null
+
 func handle_message(msg: Dictionary) -> Dictionary:
 	var id: Variant = msg.get("id")
 	var method := str(msg.get("method", ""))
 	var params: Variant = msg.get("params", {})
 	if params is not Dictionary:
 		return _error_response(id, "bad_request", "params must be an object")
+	if _debug != null:
+		var handled: Variant = _debug.handle(self, id, method, params)
+		if handled != null:
+			return handled
 	match method:
 		"get_open_mods":
 			return _result_response(id, CoreApi.Result.success(Core.get_open_mods()))

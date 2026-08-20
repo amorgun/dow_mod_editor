@@ -17,7 +17,7 @@
 [ext_resource type="Script" uid="uid://7vwa3xflrch5" path="res://mod_editor/preview_windows/preview_screen.gd" id="14_q2nq6"]
 [ext_resource type="PackedScene" uid="uid://bva07yg60lnt" path="res://mod_editor/scenes/preview_top_menu.tscn" id="15_tmbvw"]
 [ext_resource type="Script" uid="uid://7sjqjigrluhg" path="res://mod_editor/preview_windows/preview_image.gd" id="16_pyr3p"]
-[ext_resource type="Script" uid="uid://bqo4pkfdjoms3" path="res://addons/gdsquad/ui_screeen/ui_screeen.gd" id="16_s2o5q"]
+[ext_resource type="PackedScene" uid="uid://4i6xby07543s" path="res://addons/gdsquad/ui_screeen/ui_screeen.tscn" id="16_s2o5q"]
 [ext_resource type="PackedScene" uid="uid://bjf57revhmmg6" path="res://mod_editor/scenes/code_searchbar.tscn" id="17_g07yf"]
 [ext_resource type="Script" uid="uid://cjtiachugiaj4" path="res://mod_editor/preview_windows/preview_chunky.gd" id="17_r2ypo"]
 [ext_resource type="Script" uid="uid://b33i81k46yyp7" path="res://mod_editor/message_window.gd" id="18_kovvv"]
@@ -555,10 +555,8 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 ratio = 1.33
 
-[node name="UiScreen" type="Control" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/AspectRatio" unique_id=1452725975]
+[node name="UiScreen" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/AspectRatio" unique_id=1452725975 instance=ExtResource("16_s2o5q")]
 layout_mode = 2
-script = ExtResource("16_s2o5q")
-metadata/_custom_type_script = "uid://bqo4pkfdjoms3"
 
 [node name="Container" type="SubViewportContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen" unique_id=441132065]
 visible = false
@@ -583,10 +581,8 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 ratio = 1.33
 
-[node name="UiScreen" type="Control" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Container/SubViewport/AspectRatio" unique_id=2072299258]
+[node name="UiScreen" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Screen/Container/SubViewport/AspectRatio" unique_id=2072299258 instance=ExtResource("16_s2o5q")]
 layout_mode = 2
-script = ExtResource("16_s2o5q")
-metadata/_custom_type_script = "uid://bqo4pkfdjoms3"
 
 [node name="Text" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=2059010276]
 visible = false

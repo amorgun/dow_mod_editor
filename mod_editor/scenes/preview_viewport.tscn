@@ -1,0 +1,67 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://mod_editor/scenes/preview_viewport.gd" id="1_mv"]
+[ext_resource type="PackedScene" uid="uid://cjvqs4rirwkd4" path="res://addons/gdsquad/camera_controller/camera_controller.tscn" id="2_cc"]
+[ext_resource type="PackedScene" uid="uid://e0o507w2nm4k" path="res://addons/gdsquad/scenes/model.tscn" id="3_m"]
+[ext_resource type="PackedScene" uid="uid://cdhlwvvospukk" path="res://addons/gdsquad/scenes/map.tscn" id="4_map"]
+[ext_resource type="PackedScene" uid="uid://4i6xby07543s" path="res://addons/gdsquad/ui_screeen/ui_screeen.tscn" id="5_uis"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_d0h0h"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_7k6k4"]
+sky_material = SubResource("ProceduralSkyMaterial_d0h0h")
+
+[sub_resource type="Environment" id="Environment_fltsl"]
+background_mode = 2
+sky = SubResource("Sky_7k6k4")
+ambient_light_source = 3
+ambient_light_color = Color(0.8, 0.8, 0.8, 1)
+ambient_light_sky_contribution = 0.25
+reflected_light_source = 2
+tonemap_mode = 3
+
+[node name="SubViewport" type="SubViewport"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+msaa_3d = 2
+size = Vector2i(2, 2)
+script = ExtResource("1_mv")
+
+[node name="CameraController" parent="." instance=ExtResource("2_cc")]
+transform = Transform3D(1, 0, 0, 0, 0.9848077, 0.17364818, 0, -0.17364818, 0.9848077, 0, 0, 0)
+zoom_distance = 3.0
+orbit_speed = 5.0
+orbit_speed_damp_rate = 6.0
+declination_speed = 5.0
+declination_speed_damp_rate = 8.0
+min_declination_angle = -3.141592653589793
+max_declination_angle = 3.141592653589793
+process_input = false
+
+[node name="camera" parent="CameraController" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+fov = 40.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="CameraController"]
+transform = Transform3D(-0.8660256, -0.43301243, 0.24999976, 0.08682404, 0.36216766, 0.92806053, -0.49240357, 0.82543015, -0.27605057, 0, 0, 0)
+light_energy = 0.5
+shadow_enabled = true
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 1.0
+
+[node name="Model" parent="." instance=ExtResource("3_m")]
+transform = Transform3D(1, 0, -2.98023e-08, 0, 1, 2.98023e-08, 0, 0, 1, 0, 0, 0)
+
+[node name="Map" parent="." instance=ExtResource("4_map")]
+visible = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_fltsl")
+
+[node name="UiScreen" parent="." instance=ExtResource("5_uis")]
+visible = false
+
+[editable path="CameraController"]

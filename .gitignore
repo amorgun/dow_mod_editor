@@ -1,0 +1,7 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Local debug hooks (loaded by api_server when present)
+mod_editor/api/debug_api.gd
+mod_editor/api/debug_api.gd.uid
