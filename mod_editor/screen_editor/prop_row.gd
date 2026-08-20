@@ -41,7 +41,7 @@ func _init(descriptor_: Dictionary) -> void:
 	descriptor = descriptor_
 	key = descriptor["key"]
 	var label := Label.new()
-	label.text = key
+	label.text = descriptor.get("label", key)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.clip_text = true
 	add_child(label)
@@ -102,7 +102,7 @@ func _browse(edit: LineEdit) -> void:
 	if current.to_lower().begins_with("generic:"):
 		current = current.substr(8)
 	var dir := "data:" + current.get_base_dir().to_lower() if current != "" else ""
-	_file_picker.open(dir if dir not in ["", "data:"] else cfg["start_dir"], cfg["start_dir"])
+	_file_picker.open(dir if dir not in ["", "data:"] else cfg["start_dir"], cfg["start_dir"], current)
 
 func _popup_color_picker(anchor: Control) -> void:
 	if _color_popup == null:
@@ -217,7 +217,8 @@ func _make_editor(editable: bool) -> Control:
 			options.disabled = not editable
 			for o in descriptor["options"]:
 				options.add_item(o)
-			options.item_selected.connect(func (idx: int): _emit_changed(descriptor["options"][idx]))
+			options.item_selected.connect(func (idx: int):
+				_emit_changed(descriptor["values"][idx] if "values" in descriptor else descriptor["options"][idx]))
 			res = options
 		ScreenPropDefs.Kind.STATES:
 			var menu := MenuButton.new()
@@ -258,7 +259,7 @@ func _set_editor_value(value: Variant) -> void:
 				_editor.get_child(0).text = _fmt(value[0])
 				_editor.get_child(1).text = _fmt(value[1])
 		ScreenPropDefs.Kind.ENUM:
-			var idx: int = descriptor["options"].find(str(value))
+			var idx: int = descriptor["values"].find(value) if "values" in descriptor else descriptor["options"].find(str(value))
 			if idx >= 0:
 				_editor.select(idx)
 		ScreenPropDefs.Kind.STATES:

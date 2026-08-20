@@ -18,6 +18,8 @@ var make_value := Callable()
 var _folder: ModInfo.IndexFolder = null
 var _dirs: Array = []
 var _files: Array = []
+## Basename (lowercase) of the current value; pre-selected on render.
+var _select_target := ""
 var _path_edit: LineEdit
 var _search: LineEdit
 var _list: ItemList
@@ -54,8 +56,9 @@ func _init() -> void:
 	add_child(box)
 	confirmed.connect(_on_confirmed)
 
-func open(preferred_dir: String, fallback_dir := "") -> void:
+func open(preferred_dir: String, fallback_dir := "", current := "") -> void:
 	_preview.visible = load_preview.is_valid()
+	_select_target = current.get_file().get_basename().to_lower()
 	var found := Core.find_folder(mod_info, preferred_dir)
 	if not found.ok and fallback_dir != "":
 		found = Core.find_folder(mod_info, fallback_dir)
@@ -98,6 +101,13 @@ func _render() -> void:
 	for e in _files:
 		if filter == "" or filter in str(e).to_lower():
 			_list.add_item(e, _icon_file)
+	if _select_target != "":
+		for i in _list.item_count:
+			if _list.get_item_text(i).get_basename().to_lower() == _select_target:
+				_list.select(i)
+				_list.ensure_current_is_visible()
+				_on_item_selected(i)
+				break
 
 func _on_path_submitted(text: String) -> void:
 	var found := Core.find_folder(mod_info, text)

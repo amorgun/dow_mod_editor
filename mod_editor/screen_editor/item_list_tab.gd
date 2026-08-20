@@ -131,6 +131,8 @@ func sync_display(keep_selection: bool = false) -> void:
 		_fill_button.disabled = not own
 	if keep_selection and selected >= 0 and selected < len(items):
 		_list.select(selected)
+	elif kind != ItemKind.GUIDES and len(items) > 0:
+		_list.select(0)
 	else:
 		_sync_rows(-1)
 

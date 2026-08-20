@@ -92,6 +92,9 @@ static var WIDGET_COMMON: Array[Dictionary] = [
 ]
 
 ## Extra props per widget type; the raw config keeps any keys not listed here.
+## Data stores a "horizontal" bool; the row shows a direction dropdown.
+const DIRECTION_PROP := {"key": "horizontal", "kind": Kind.ENUM, "label": "direction", "options": ["horizontal", "vertical"], "values": [true, false], "default": true}
+
 static var WIDGET_EXTRA: Dictionary[String, Array] = {
 	"TextLabel": [
 		{"key": "text", "kind": Kind.STRING},
@@ -120,7 +123,7 @@ static var WIDGET_EXTRA: Dictionary[String, Array] = {
 		{"key": "stepSize", "kind": Kind.NUMBER},
 	],
 	"ScrollBar": [
-		{"key": "horizontal", "kind": Kind.BOOL},
+		DIRECTION_PROP,
 		{"key": "range", "kind": Kind.NUMBER},
 		{"key": "stepSize", "kind": Kind.NUMBER},
 	],
@@ -237,8 +240,8 @@ static func item_template(type: String) -> Dictionary:
 
 const GUIDE_TYPES: Array[String] = ["Guide"]
 
-const GUIDE_PROPS: Array[Dictionary] = [
-	{"key": "horizontal", "kind": Kind.BOOL},
+static var GUIDE_PROPS: Array[Dictionary] = [
+	DIRECTION_PROP,
 	{"key": "position", "kind": Kind.NUMBER},
 ]
 
