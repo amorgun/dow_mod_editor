@@ -15,7 +15,7 @@ index 19aeace..3ec26d2 100755
  func duplicate(deep: bool = false) -> SafeDict:
  	return SafeDict.new(_data.duplicate(deep))
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..6028475 100755
+index 44cf447..7a85a88 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
 @@ -1,7 +1,10 @@
@@ -139,7 +139,17 @@ index 44cf447..6028475 100755
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
  		var node_text := effective_config.get_str("text")
-@@ -420,8 +413,65 @@ class GraphicArt extends Art:
+@@ -306,9 +299,6 @@ class Widget extends Control:
+ class Art extends Control:
+ 	var states: WIDGET_STATE = 0
+ 
+-	func _init() -> void:
+-		mouse_filter = Control.MOUSE_FILTER_PASS
+-
+ class GraphicArt extends Art:
+ 	var _img_node: TextureRect
+ 	var texture: Texture2D:
+@@ -420,8 +410,65 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
@@ -205,7 +215,7 @@ index 44cf447..6028475 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -442,7 +492,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +489,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):

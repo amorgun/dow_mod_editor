@@ -2,7 +2,7 @@ class_name WidgetTree extends Tree
 
 signal select_widget(widget: UiScreen.Widget)
 signal copy_requested(widget: UiScreen.Widget)
-signal paste_requested(target: UiScreen.Widget, target_item: TreeItem)
+signal paste_requested(target: UiScreen.Widget)
 signal delete_requested(widget: UiScreen.Widget, item: TreeItem)
 
 enum MenuId {
@@ -293,5 +293,5 @@ func _on_menu_id_pressed(id: int) -> void:
 		return
 	match id:
 		MenuId.COPY: copy_requested.emit(_get_widget(item))
-		MenuId.PASTE: paste_requested.emit(_get_widget(item), item)
+		MenuId.PASTE: paste_requested.emit(_get_widget(item))
 		MenuId.DELETE: delete_requested.emit(_get_widget(item), item)

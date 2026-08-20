@@ -11,10 +11,7 @@ signal item_selected(index: int)
 signal item_prop_changed(index: int, key: String, value: Variant)
 signal item_prop_removed(index: int, key: String)
 signal item_added(type: String)
-signal item_deleted(index: int)
 signal item_moved(from_index: int, to_index: int)
-signal item_copied(index: int)
-signal item_pasted()
 signal fill_requested(index: int)
 signal override_requested()
 
@@ -24,9 +21,6 @@ var editable := true
 var _list: ItemBlobList
 var _rows_box: VBoxContainer
 var _override_button: Button
-var _delete_button: Button
-var _copy_button: Button
-var _paste_button: Button
 var _fill_button: Button
 
 func _ready() -> void:
@@ -39,9 +33,6 @@ func _ready() -> void:
 		add_popup.add_item(t)
 	add_popup.index_pressed.connect(func (idx: int): item_added.emit(add_popup.get_item_text(idx)))
 	toolbar.add_child(add_menu)
-	_delete_button = _add_tool_button(toolbar, "Delete", func (): _emit_for_selection(item_deleted))
-	_copy_button = _add_tool_button(toolbar, "Copy", func (): _emit_for_selection(item_copied))
-	_paste_button = _add_tool_button(toolbar, "Paste", func (): item_pasted.emit())
 	if kind == ItemKind.HIT:
 		_fill_button = _add_tool_button(toolbar, "Fill Widget", func (): _emit_for_selection(fill_requested))
 	_override_button = _add_tool_button(toolbar, "Override", func (): override_requested.emit())
@@ -112,9 +103,8 @@ func sync_display(keep_selection: bool = false) -> void:
 		_list.add_item(label)
 	_override_button.visible = editable and widget != null and not is_own()
 	_list.reorder_enabled = own
-	for b in [_delete_button, _copy_button, _paste_button, _fill_button]:
-		if b != null:
-			b.disabled = not own
+	if _fill_button != null:
+		_fill_button.disabled = not own
 	if keep_selection and selected >= 0 and selected < len(items):
 		_list.select(selected)
 	else:

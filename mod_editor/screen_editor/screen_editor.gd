@@ -34,10 +34,7 @@ func _ready() -> void:
 		tab.item_prop_changed.connect(_on_item_prop_changed.bind(tab))
 		tab.item_prop_removed.connect(_on_item_prop_removed.bind(tab))
 		tab.item_added.connect(_on_item_added.bind(tab))
-		tab.item_deleted.connect(_on_item_deleted.bind(tab))
 		tab.item_moved.connect(_on_item_moved.bind(tab))
-		tab.item_copied.connect(_on_item_copied.bind(tab))
-		tab.item_pasted.connect(_on_item_pasted.bind(tab))
 		tab.fill_requested.connect(_on_item_fill.bind(tab))
 		tab.override_requested.connect(_on_items_override.bind(tab))
 
@@ -57,11 +54,22 @@ func _input(event: InputEvent) -> void:
 		undo_redo.undo()
 	elif event.is_action_pressed("ui_redo", false, true):
 		undo_redo.redo()
+	elif _current_item_tab() != null and selected_widget != null and get_viewport().gui_get_focus_owner() is not LineEdit:
+		# the active sidebar tab decides the copy/paste/delete context
+		var tab := _current_item_tab()
+		var index := tab.selected_index()
+		var own := tab.editable and tab.is_own()
+		if event.is_action_pressed("ui_copy", false, true) and index >= 0:
+			_on_item_copied(index, tab)
+		elif event.is_action_pressed("ui_paste", false, true) and own:
+			_on_item_pasted(tab)
+		elif event is InputEventKey and event.pressed and event.keycode == KEY_DELETE and own and index >= 0:
+			_on_item_deleted(index, tab)
 	elif element_tree.has_focus() and selected_widget != null and _selected_editable:
 		if event.is_action_pressed("ui_copy", false, true):
 			_on_copy_widget(selected_widget)
 		elif event.is_action_pressed("ui_paste", false, true):
-			_on_paste_widget(selected_widget, element_tree.get_selected())
+			_on_paste_widget(selected_widget)
 		elif event is InputEventKey and event.pressed and event.keycode == KEY_DELETE:
 			if selected_widget.parent_widget != null:
 				_on_delete_widget(selected_widget, element_tree.get_selected())
@@ -163,7 +171,7 @@ static func unique_name(screen: UiScreen, name: String) -> String:
 	return unique_name_in(taken, name)
 
 static func _num(v: float) -> Variant:
-	return int(roundf(v)) if absf(v - roundf(v)) < 0.01 else v
+	return int(roundf(v)) if absf(v - roundf(v)) < 0.01 else snappedf(v, 0.001)
 
 func _reinit_subtree(widget: UiScreen.Widget) -> void:
 	widget.init_size()
@@ -271,10 +279,10 @@ func _set_own_value(widget: UiScreen.Widget, key: String, value: Variant, has_va
 func _after_widget_config_change(widget: UiScreen.Widget, key: String) -> void:
 	if key in ["position", "size", "style"]:
 		_reinit_subtree(widget)
-	for descriptor in ScreenPropDefs.widget_props(widget.get_effective_config().get_str("type")):
+	var effective := widget.get_effective_config()
+	for descriptor in ScreenPropDefs.widget_props(effective.get_str("type")):
 		if descriptor["key"] == key and "apply" in descriptor:
-			var effective: Dictionary = widget.get_effective_config().get_raw()
-			descriptor["apply"].call(widget, effective.get(key, ScreenPropDefs.default_value(descriptor)))
+			descriptor["apply"].call(widget, effective.get_raw().get(key, ScreenPropDefs.default_value(descriptor)))
 	widget.emit_signal("update")
 
 func _on_prop_changed(key: String, value: Variant) -> void:
@@ -357,8 +365,8 @@ func _uniquify_config(config: Dictionary, taken: Dictionary, renames: Dictionary
 		if config.get(s) is Dictionary:
 			_uniquify_config(config[s], taken, renames)
 
-func _on_paste_widget(target: UiScreen.Widget, target_item: TreeItem) -> void:
-	if _widget_clipboard.is_empty() or target == null or target_item == null:
+func _on_paste_widget(target: UiScreen.Widget) -> void:
+	if _widget_clipboard.is_empty() or target == null:
 		return
 	var config: Dictionary = _widget_clipboard["config"].duplicate(true)
 	var renames: Dictionary = {}
@@ -414,9 +422,7 @@ func _detach_widget_node(widget: UiScreen.Widget) -> void:
 		selection.visible = false
 		item_selection.visible = false
 		widget_props.set_widget(null, true)
-	var item := element_tree.find_item(widget)
-	if item != null:
-		item.free()
+	element_tree.find_item(widget).free()
 	widget.get_parent().remove_child(widget)
 
 func _on_delete_widget(widget: UiScreen.Widget, item: TreeItem) -> void:
@@ -467,6 +473,8 @@ func _restore_widget(parent: UiScreen.Widget, widget: UiScreen.Widget, infos: Ar
 	_select_row(widget)
 
 func _select_row(widget: UiScreen.Widget) -> void:
+	# focused: an unfocused Tree draws selection with the dim stylebox
+	element_tree.grab_focus()
 	var item := element_tree.find_item(widget)
 	if item != null:
 		element_tree.set_selected(item, 0)
@@ -551,8 +559,8 @@ func _on_item_selection_edit_ended() -> void:
 	var old_size = item.get("size")
 	undo_redo.create_action("Edit item box")
 	undo_redo.add_do_method(func ():
-		item["position"] = [new_pos.x, new_pos.y]
-		item["size"] = [new_size.x, new_size.y]
+		item["position"] = [snappedf(new_pos.x, 0.001), snappedf(new_pos.y, 0.001)]
+		item["size"] = [snappedf(new_size.x, 0.001), snappedf(new_size.y, 0.001)]
 		_after_item_change(tab, widget)
 	)
 	undo_redo.add_undo_method(func ():

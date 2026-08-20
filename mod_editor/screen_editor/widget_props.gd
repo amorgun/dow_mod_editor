@@ -119,21 +119,15 @@ func _build_style_row() -> void:
 		popup.set_item_as_radio_checkable(i, false)
 	_style_options.item_selected.connect(func (idx: int):
 		var id: Array = _style_ids[idx]
-		style_selected.emit(id[0] if len(id) == 2 else "", id[1] if len(id) == 2 else "")
+		# deferred: the handler detaches this row mid-emission otherwise
+		call_deferred("emit_signal", "style_selected", id[0] if len(id) == 2 else "", id[1] if len(id) == 2 else "")
 	)
-
-func _current_slot() -> int:
-	var parent := widget.parent_widget
-	for s in UiScreen.Slot.values():
-		if parent.get_widget_slot(s, UiScreen.SlotType.OWN) == widget:
-			return s
-	return -1
 
 func _add_slot_row() -> void:
 	var options := _add_labeled_option("slot")
 	options.disabled = not editable
 	var parent := widget.parent_widget
-	var current := _current_slot()
+	var current := ScreenEditor.slot_of(widget)
 	_slot_values = [-1]
 	options.add_item("None")
 	for s in ScreenPropDefs.parent_slots(parent.get_effective_config().get_str("type")):
@@ -142,4 +136,4 @@ func _add_slot_row() -> void:
 		options.add_item(UiScreen.Slot.keys()[s])
 		_slot_values.append(s)
 	options.select(_slot_values.find(current))
-	options.item_selected.connect(func (idx: int): slot_selected.emit(_slot_values[idx]))
+	options.item_selected.connect(func (idx: int): call_deferred("emit_signal", "slot_selected", _slot_values[idx]))
