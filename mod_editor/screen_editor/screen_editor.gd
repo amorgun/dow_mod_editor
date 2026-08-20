@@ -44,6 +44,7 @@ func _ready() -> void:
 			_view_ratios.append(SafeDict.new(item))
 			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
 	view_ratio_option.add_item("Responsive")
+	widget_props.guides_tab.hide_all_toggled.connect(func (hidden: bool): guide_lines.visible = not hidden)
 	for tab in [widget_props.art_tab, widget_props.hit_tab, widget_props.guides_tab]:
 		tab.item_selected.connect(_on_item_selected.bind(tab))
 		tab.item_prop_changed.connect(_on_item_prop_changed.bind(tab))

@@ -17,6 +17,7 @@ signal item_prop_removed(index: int, key: String)
 signal item_added(type: String)
 signal item_moved(from_index: int, to_index: int)
 signal fill_requested(index: int)
+signal hide_all_toggled(hidden: bool)
 signal override_requested()
 
 var widget: UiScreen.Widget = null
@@ -43,6 +44,12 @@ func _ready() -> void:
 	toolbar.add_child(add_menu)
 	if kind == ItemKind.HIT:
 		_fill_button = _add_tool_button(toolbar, "Fill Widget", func (): _emit_for_selection(fill_requested))
+	if kind == ItemKind.GUIDES:
+		var hide_all := CheckBox.new()
+		hide_all.text = "Hide all"
+		hide_all.button_pressed = true
+		hide_all.toggled.connect(func (pressed: bool): hide_all_toggled.emit(pressed))
+		toolbar.add_child(hide_all)
 	_override_button = _add_tool_button(toolbar, "Override", func (): override_requested.emit())
 
 	_list = ItemBlobList.new()
