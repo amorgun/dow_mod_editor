@@ -8,6 +8,13 @@ aspect_ratio = 4 / 3
 -- this height; the canvas renders at it and is scaled to fit.
 viewport_height = 768
 
+-- Default grid step in virtual pixels for the Snap option of the drag/resize
+-- gizmo and guide dragging; the step stays adjustable in the editor UI.
+snap_step = 8
+
+-- Half-width in virtual pixels of the drag area around a guide line.
+guide_grab_margin = 4
+
 -- Display shapes offered by the editor's View selector, in order;
 -- the first entry is the default. "Responsive" is always appended last.
 preview_ratios = {

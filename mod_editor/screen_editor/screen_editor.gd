@@ -16,6 +16,8 @@ enum ViewMode {
 @onready var guide_lines: GuideLines = $VBoxContainer/Columns/Preview/PanZoom/SubViewport/EditorRatio/Free/Canvas/GuideLines
 @onready var widget_props: WidgetProps = $VBoxContainer/Columns/Sidebar
 @onready var mode_option: OptionButton = $VBoxContainer/TopBar/Mode
+@onready var snap_check: CheckBox = $VBoxContainer/TopBar/SnapCheck
+@onready var snap_step_spin: SpinBox = $VBoxContainer/TopBar/SnapStep
 
 var undo_redo := UndoRedo.new()
 var selected_widget: UiScreen.Widget
@@ -44,6 +46,12 @@ func _ready() -> void:
 			_view_ratios.append(SafeDict.new(item))
 			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
 	view_ratio_option.add_item("Responsive")
+	snap_step_spin.value = view_config.get_value("snap_step", 8.0, TYPE_FLOAT)
+	guide_lines.grab_margin = view_config.get_value("guide_grab_margin", 4.0, TYPE_FLOAT)
+	_apply_snap()
+	for gizmo in [selection, item_selection]:
+		gizmo.drag_started.connect(_update_snap_lines)
+		gizmo.resize_started.connect(_update_snap_lines)
 	widget_props.guides_tab.hide_all_toggled.connect(func (hidden: bool): guide_lines.visible = not hidden)
 	for tab in [widget_props.art_tab, widget_props.hit_tab, widget_props.guides_tab]:
 		tab.item_selected.connect(_on_item_selected.bind(tab))
@@ -526,6 +534,41 @@ func _on_mode_selected(index: int) -> void:
 
 func _on_reset_view_pressed() -> void:
 	pan_zoom.reset()
+
+func _on_snap_toggled(_pressed: bool) -> void:
+	_apply_snap()
+
+func _on_snap_step_changed(_value: float) -> void:
+	_apply_snap()
+
+func _apply_snap() -> void:
+	var step := snap_step_spin.value if snap_check.button_pressed else 0.0
+	selection.snap_step = step
+	item_selection.snap_step = step
+	guide_lines.snap_px = step
+
+## Refreshed at every gizmo interaction start, so guide edits, visibility and
+## canvas size never leave stale snap targets behind.
+func _update_snap_lines() -> void:
+	var xs: Array[float] = []
+	var ys: Array[float] = []
+	if guide_lines.is_visible_in_tree():
+		for g in ui_screen.guides:
+			if g is not Dictionary:
+				continue
+			var pos := float(g.get("position", 0.0))
+			if bool(g.get("horizontal", false)):
+				ys.append(pos * guide_lines.size.y)
+			else:
+				xs.append(pos * guide_lines.size.x)
+	var origin := ui_screen.widget_root.get_global_rect().position - ui_screen.get_global_rect().position
+	for gizmo in [selection, item_selection]:
+		gizmo.snap_lines_x = xs
+		gizmo.snap_lines_y = ys
+		gizmo.snap_origin = origin
+
+func _on_guide_dragged(index: int, new_position: float) -> void:
+	_on_item_prop_changed(index, "position", new_position, widget_props.guides_tab)
 
 func _save() -> void:
 	if _index_file == null:
