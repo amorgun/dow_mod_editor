@@ -60,6 +60,13 @@ func _emit_changed(value: Variant) -> void:
 	_last_value = value
 	call_deferred("emit_signal", "changed", key, value)
 
+static func _states_text(states: Array) -> String:
+	var letters := PackedStringArray()
+	for s in STATE_NAMES:
+		if s in states:
+			letters.append(s[0])
+	return "|".join(letters) if len(letters) else "-"
+
 static func _fmt(v: Variant) -> String:
 	return str(snappedf(v, 0.001)) if v is float else str(v)
 
@@ -133,7 +140,7 @@ func _make_editor(editable: bool) -> Control:
 		ScreenPropDefs.Kind.STATES:
 			var menu := MenuButton.new()
 			menu.disabled = not editable
-			menu.text = "States"
+			menu.text = "-"
 			var popup := menu.get_popup()
 			popup.hide_on_checkable_item_selection = false
 			for s in STATE_NAMES:
@@ -144,6 +151,7 @@ func _make_editor(editable: bool) -> Control:
 				for i in popup.get_item_count():
 					if popup.is_item_checked(i):
 						val.append(STATE_NAMES[i])
+				menu.text = _states_text(val)
 				_emit_changed(val)
 			)
 			res = menu
@@ -177,3 +185,4 @@ func _set_editor_value(value: Variant) -> void:
 			var states: Array = value if value is Array else []
 			for i in popup.get_item_count():
 				popup.set_item_checked(i, STATE_NAMES[i] in states)
+			_editor.text = _states_text(states)

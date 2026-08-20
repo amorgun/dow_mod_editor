@@ -479,6 +479,8 @@ func _select_row(widget: UiScreen.Widget) -> void:
 	if item != null:
 		element_tree.set_selected(item, 0)
 		element_tree.scroll_to_item(item)
+		# set_selected updates state without repainting (input normally does it)
+		element_tree.queue_redraw()
 	_on_select_widget(widget)
 
 func _on_mode_selected(index: int) -> void:
@@ -490,7 +492,9 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 	if mode_option.selected != ViewMode.PICKER:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-		var hits := ui_screen.widgets_at(ui_screen.get_global_mouse_position())
+		# style widgets' descendants have no tree rows: not offered for picking
+		var hits := ui_screen.widgets_at(ui_screen.get_global_mouse_position()).filter(
+			func (w: UiScreen.Widget) -> bool: return element_tree.find_item(w) != null)
 		if hits == _pick_stack and len(hits) > 0:
 			_pick_index = (_pick_index + 1) % len(hits)
 		else:
