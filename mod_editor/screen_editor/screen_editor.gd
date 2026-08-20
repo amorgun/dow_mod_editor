@@ -83,6 +83,7 @@ func setup_content(content: String, loader: ModResourceLoader) -> void:
 	parser.load(content)
 	parser.setup_view(ui_screen)
 	PropRow.set_palette(ui_screen.common_colors)
+	PropRow.loader = loader
 	element_tree.clear()
 	var root := element_tree.create_item()
 	for c in ui_screen.get_children():

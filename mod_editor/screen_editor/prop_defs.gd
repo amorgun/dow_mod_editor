@@ -21,6 +21,51 @@ const WIDGET_TYPES: Array[String] = [
 static func control_prop(key: String, kind: Kind, apply: Callable, default: Variant) -> Dictionary:
 	return {"key": key, "kind": kind, "apply": apply, "default": default}
 
+## A string prop holding a mod file path, picked with ModFilePicker.
+## root is the navigation floor, start_dir the initial folder; the callbacks
+## configure the folder view, the preview, and the stored value.
+static func path_prop(key: String, root: String, start_dir: String, list_entries: Callable, load_preview: Callable, make_value: Callable) -> Dictionary:
+	return {"key": key, "kind": Kind.STRING, "picker": {
+		"root": root, "start_dir": start_dir, "list_entries": list_entries,
+		"load_preview": load_preview, "make_value": make_value,
+	}}
+
+const IMAGE_EXTS: Array[String] = ["rtx", "dds", "tga"]
+
+static func _image_entries(_dir: String, files: PackedStringArray) -> Array:
+	var seen: Dictionary[String, bool] = {}
+	var res: Array = []
+	for f in files:
+		if f.get_extension() in IMAGE_EXTS and f.get_basename() not in seen:
+			seen[f.get_basename()] = true
+			res.append(f.get_basename())
+	return res
+
+static func _image_preview(dir: String, entry: String) -> Image:
+	# the screen renderer's format priority: rtx, then dds, then tga
+	var image: Image = PropRow.loader.pload_image(dir.path_join(entry) + ".rtx")
+	if image == null:
+		image = PropRow.loader.pload_image(dir.path_join(entry) + ".dds")
+	if image != null:
+		image.decompress()
+		image.flip_y()
+	else:
+		image = PropRow.loader.pload_image(dir.path_join(entry) + ".tga")
+	return image
+
+static func _image_value(dir: String, entry: String) -> String:
+	return dir.trim_prefix("data:").path_join(entry) + ".tga"
+
+static func _swf_entries(_dir: String, files: PackedStringArray) -> Array:
+	var res: Array = []
+	for f in files:
+		if f.get_extension() == "swf":
+			res.append(f)
+	return res
+
+static func _swf_value(dir: String, entry: String) -> String:
+	return "GENERIC:" + dir.trim_prefix("data:").path_join(entry).replace("/", "\\").to_upper()
+
 ## Props shown for every widget type. "name" is edited via the tree; "style" and
 ## the slot assignment get dedicated rows in the panel.
 static var WIDGET_COMMON: Array[Dictionary] = [
@@ -36,7 +81,7 @@ static var WIDGET_COMMON: Array[Dictionary] = [
 ]
 
 ## Extra props per widget type; the raw config keeps any keys not listed here.
-const WIDGET_EXTRA: Dictionary[String, Array] = {
+static var WIDGET_EXTRA: Dictionary[String, Array] = {
 	"TextLabel": [
 		{"key": "text", "kind": Kind.STRING},
 		{"key": "multiline", "kind": Kind.BOOL},
@@ -51,7 +96,7 @@ const WIDGET_EXTRA: Dictionary[String, Array] = {
 		{"key": "text", "kind": Kind.STRING},
 		{"key": "wantAlternate", "kind": Kind.BOOL},
 	],
-	"Swf": [{"key": "swf", "kind": Kind.STRING}],
+	"Swf": [path_prop("swf", "data:", "data:art/ui/swf", _swf_entries, Callable(), _swf_value)],
 	"EditText": [
 		{"key": "text", "kind": Kind.STRING},
 		{"key": "multiline", "kind": Kind.BOOL},
@@ -94,9 +139,9 @@ const ART_COMMON: Array[Dictionary] = [
 	{"key": "states", "kind": Kind.STATES},
 ]
 
-const ART_EXTRA: Dictionary[String, Array] = {
+static var ART_EXTRA: Dictionary[String, Array] = {
 	"Graphic": [
-		{"key": "texture", "kind": Kind.STRING},
+		path_prop("texture", "data:", "data:art/ui", _image_entries, _image_preview, _image_value),
 		{"key": "flipVertical", "kind": Kind.BOOL},
 		{"key": "flipHorizontal", "kind": Kind.BOOL},
 		{"key": "isTextureStatic", "kind": Kind.BOOL},

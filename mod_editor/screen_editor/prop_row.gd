@@ -14,6 +14,10 @@ var _editor: Control = null
 var _last_value: Variant = null
 var _color_popup: PopupPanel = null
 var _color_picker: ColorPicker = null
+var _file_picker: ModFilePicker = null
+
+## The open screen file's modset loader; path pickers browse only it.
+static var loader: ModResourceLoader = null
 
 static var _palette_colors: Dictionary = {}
 static var _palette_names: Array = []
@@ -77,6 +81,26 @@ func _emit_changed(value: Variant) -> void:
 	_last_value = value
 	call_deferred("emit_signal", "changed", key, value)
 
+func _browse(edit: LineEdit) -> void:
+	var cfg: Dictionary = descriptor["picker"]
+	if _file_picker == null:
+		_file_picker = ModFilePicker.new()
+		_file_picker.loader = loader
+		_file_picker.root = cfg["root"]
+		_file_picker.list_entries = cfg["list_entries"]
+		_file_picker.load_preview = cfg["load_preview"]
+		_file_picker.make_value = cfg["make_value"]
+		add_child(_file_picker)
+		_file_picker.picked.connect(func (value: String):
+			edit.text = value
+			_emit_changed(value)
+		)
+	var current: String = edit.text.replace("\\", "/")
+	if current.to_lower().begins_with("generic:"):
+		current = current.substr(8)
+	var dir := "data:" + current.get_base_dir().to_lower() if current != "" else ""
+	_file_picker.open(dir if dir not in ["", "data:"] else cfg["start_dir"])
+
 func _popup_color_picker(anchor: Control) -> void:
 	if _color_popup == null:
 		_color_popup = PopupPanel.new()
@@ -119,11 +143,22 @@ func _make_editor(editable: bool) -> Control:
 		ScreenPropDefs.Kind.STRING:
 			var edit := LineEdit.new()
 			edit.editable = editable
+			edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var commit := func ():
 				_emit_changed(edit.text)
 			edit.text_submitted.connect(func (_t: String): commit.call())
 			edit.focus_exited.connect(commit)
-			res = edit
+			if "picker" in descriptor:
+				var box := HBoxContainer.new()
+				box.add_child(edit)
+				var browse := Button.new()
+				browse.text = "…"
+				browse.disabled = not editable
+				browse.pressed.connect(func (): _browse(edit))
+				box.add_child(browse)
+				res = box
+			else:
+				res = edit
 		ScreenPropDefs.Kind.NUMBER:
 			var edit := LineEdit.new()
 			edit.editable = editable
@@ -204,7 +239,8 @@ func _make_editor(editable: bool) -> Control:
 func _set_editor_value(value: Variant) -> void:
 	match descriptor["kind"]:
 		ScreenPropDefs.Kind.STRING:
-			_editor.text = str(value)
+			var line: LineEdit = _editor if _editor is LineEdit else _editor.get_child(0)
+			line.text = str(value)
 		ScreenPropDefs.Kind.NUMBER:
 			_editor.text = str(value)
 		ScreenPropDefs.Kind.BOOL:

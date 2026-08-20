@@ -1,3 +1,38 @@
+diff --git a/mod_set.gd b/mod_set.gd
+index 88c0ec2..8768376 100755
+--- a/mod_set.gd
++++ b/mod_set.gd
+@@ -298,6 +298,19 @@ func locate_data(path: String) -> FilePath:
+ 	var locations := get_all_file_locations("data", path)
+ 	return locations[0] if len(locations) > 0 else null
+ 
++func list_dirs(path: ModSet.ModPath) -> PackedStringArray:
++	var res: Dictionary[String, bool] = {}
++	for source in sources:
++		if not source.exists:
++			continue
++		if source.packed:
++			for f in source.get_directories_packed(path):
++				res[f.to_lower()] = true
++		else:
++			for f in source.get_directories_unpacked(path):
++				res[f.to_lower()] = true
++	return res.keys()
++
+ func list_files(path: ModSet.ModPath) -> PackedStringArray:
+ 	var res: Dictionary[String, bool] = {}
+ 	for source in sources:
+diff --git a/resource_loader.gd b/resource_loader.gd
+index 5b0a766..ade7c57 100755
+--- a/resource_loader.gd
++++ b/resource_loader.gd
+@@ -84,3 +84,6 @@ func pload_font(path: String) -> Dictionary:
+ 
+ func plist_files(path: String) -> PackedStringArray:
+ 	return mod.list_files(ModSet.ModPath.from_path(path))
++
++func plist_dirs(path: String) -> PackedStringArray:
++	return mod.list_dirs(ModSet.ModPath.from_path(path))
 diff --git a/safe_dict.gd b/safe_dict.gd
 index 19aeace..3ec26d2 100755
 --- a/safe_dict.gd
