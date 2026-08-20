@@ -42,8 +42,6 @@ func _ready() -> void:
 		add_popup.add_item(t)
 	add_popup.index_pressed.connect(func (idx: int): item_added.emit(add_popup.get_item_text(idx)))
 	toolbar.add_child(add_menu)
-	if kind == ItemKind.HIT:
-		_fill_button = _add_tool_button(toolbar, "Fill Widget", func (): _emit_for_selection(fill_requested))
 	if kind == ItemKind.GUIDES:
 		var hide_all := CheckBox.new()
 		hide_all.text = "Hide all"
@@ -57,6 +55,13 @@ func _ready() -> void:
 	_list.item_selected.connect(func (): item_selected.emit(selected_index()))
 	_list.reordered.connect(func (from_index: int, to_index: int): item_moved.emit(from_index, to_index))
 	add_child(_list)
+
+	if kind != ItemKind.GUIDES:
+		_fill_button = Button.new()
+		_fill_button.text = "Fill Widget"
+		_fill_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		_fill_button.pressed.connect(func (): _emit_for_selection(fill_requested))
+		add_child(_fill_button)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
