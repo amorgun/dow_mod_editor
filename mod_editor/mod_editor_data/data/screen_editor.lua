@@ -10,7 +10,10 @@ viewport_height = 768
 
 -- Default grid step in virtual pixels for the Snap option of the drag/resize
 -- gizmo and guide dragging; the step stays adjustable in the editor UI.
-snap_step = 8
+snap_step = 5
+
+-- Whether the Snap checkbox starts enabled.
+snap_enabled = true
 
 -- Half-width in virtual pixels of the drag area around a guide line.
 guide_grab_margin = 4

@@ -24,6 +24,7 @@ static var mod_info: ModInfo = null
 static var _palette_colors: Dictionary = {}
 static var _palette_names: Array = []
 static var _palette_icons: Dictionary = {}
+static var _icon_folder: ImageTexture = null
 
 ## Named colours from the screen's .colours tables; icons cached per file open.
 static func set_palette(colors: Dictionary) -> void:
@@ -154,7 +155,9 @@ func _make_editor(editable: bool) -> Control:
 				var box := HBoxContainer.new()
 				box.add_child(edit)
 				var browse := Button.new()
-				browse.text = "…"
+				if _icon_folder == null:
+					_icon_folder = ImageTexture.create_from_image(Settings.data.pload_svg("data:art/ui/textures/Folder.svg", Color("e0e0e0")))
+				browse.icon = _icon_folder
 				browse.disabled = not editable
 				browse.pressed.connect(func (): _browse(edit))
 				box.add_child(browse)

@@ -2,7 +2,7 @@ class_name ScreenEditor extends Panel
 
 enum ViewMode {
 	INTERACTIVE,
-	PICKER,
+	EDIT,
 }
 
 @onready var pan_zoom: PanZoomView = $VBoxContainer/Columns/Preview/PanZoom
@@ -58,7 +58,9 @@ func _ready() -> void:
 	for ratio in _view_ratios:
 		screen_ratio_option.add_item(ratio.get_str("name", "?"))
 	ui_screen.default_ratio = view_config.get_value("aspect_ratio", 4.0 / 3, TYPE_FLOAT)
-	snap_step_spin.value = view_config.get_value("snap_step", 8.0, TYPE_FLOAT)
+	snap_step_spin.value = view_config.get_value("snap_step", 5.0, TYPE_FLOAT)
+	snap_check.set_pressed_no_signal(view_config.get_value("snap_enabled", true, TYPE_BOOL))
+	_on_mode_selected(mode_option.selected)
 	guide_lines.grab_margin = view_config.get_value("guide_grab_margin", 4.0, TYPE_FLOAT)
 	widget_select_rect.border_color = _config_color(view_config, "color_widget_select", Color(0.797, 0.36, 0.194))
 	_color_art_select = _config_color(view_config, "color_art_select", Color(0.2, 0.55, 0.9))
@@ -269,7 +271,7 @@ func _on_select_widget(widget: UiScreen.Widget) -> void:
 	selection.anchor_top = (widget_rect.position.y  - screen_rect.position.y) / screen_rect.size.y
 	selection.anchor_right = (widget_rect.end.x - screen_rect.position.x) / screen_rect.size.x
 	selection.anchor_bottom = (widget_rect.end.y - screen_rect.position.y) / screen_rect.size.y
-	selection.visible = widget_props.current_tab == 0
+	selection.visible = widget_props.current_tab == 0 and _gizmos_allowed()
 	item_selection.visible = false
 
 	if widget == selected_widget:
@@ -562,9 +564,18 @@ func _select_row(widget: UiScreen.Widget) -> void:
 		element_tree.queue_redraw()
 	_on_select_widget(widget)
 
+## Interactive mode hides the selection gizmos so nothing overlays the screen.
+func _gizmos_allowed() -> bool:
+	return mode_option.selected != ViewMode.INTERACTIVE
+
 func _on_mode_selected(index: int) -> void:
 	ui_screen.is_interactive = index == ViewMode.INTERACTIVE
 	_pick_stack = []
+	if selected_widget != null and _gizmos_allowed():
+		_refresh_selection_gizmos()
+	else:
+		selection.visible = false
+		item_selection.visible = false
 
 func _on_reset_view_pressed() -> void:
 	pan_zoom.reset()
@@ -668,7 +679,7 @@ func _sync_screen_ratio_option() -> void:
 
 ## Picking is on the right button: the left button belongs to the gizmo.
 func _on_canvas_gui_input(event: InputEvent) -> void:
-	if mode_option.selected != ViewMode.PICKER:
+	if mode_option.selected != ViewMode.EDIT:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		# style widgets' descendants have no tree rows: not offered for picking
@@ -683,7 +694,7 @@ func _on_canvas_gui_input(event: InputEvent) -> void:
 			_select_row(hits[_pick_index])
 
 func _on_sidebar_tab_changed(_tab: int) -> void:
-	selection.visible = selected_widget != null and widget_props.current_tab == 0
+	selection.visible = selected_widget != null and widget_props.current_tab == 0 and _gizmos_allowed()
 	_update_item_gizmo()
 
 func _current_item_tab() -> ItemListTab:
@@ -718,7 +729,7 @@ func _update_item_gizmo() -> void:
 	item_selection.anchor_top = (rect.position.y - screen_rect.position.y) / screen_rect.size.y
 	item_selection.anchor_right = (rect.end.x - screen_rect.position.x) / screen_rect.size.x
 	item_selection.anchor_bottom = (rect.end.y - screen_rect.position.y) / screen_rect.size.y
-	item_selection.visible = tab.is_own() and tab.editable
+	item_selection.visible = tab.is_own() and tab.editable and _gizmos_allowed()
 	var is_hit := tab.kind == ItemListTab.ItemKind.HIT
 	item_select_rect.border_color = _color_hit_area if is_hit else _color_art_select
 	hit_fill.visible = is_hit

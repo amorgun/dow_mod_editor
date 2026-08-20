@@ -66,6 +66,17 @@ static func _swf_entries(_dir: String, files: PackedStringArray) -> Array:
 static func _swf_value(dir: String, entry: String) -> String:
 	return "GENERIC:" + dir.trim_prefix("data:").path_join(entry).replace("/", "\\").to_upper()
 
+static func _font_entries(_dir: String, files: PackedStringArray) -> Array:
+	var res: Array = []
+	for f in files:
+		if f.get_extension() == "fnt":
+			res.append(f.get_basename())
+	return res
+
+## Fonts are referenced by bare name: common_fonts keys are .fnt basenames.
+static func _font_value(_dir: String, entry: String) -> String:
+	return entry
+
 ## Props shown for every widget type. "name" is edited via the tree; "style" and
 ## the slot assignment get dedicated rows in the panel.
 static var WIDGET_COMMON: Array[Dictionary] = [
@@ -148,7 +159,7 @@ static var ART_EXTRA: Dictionary[String, Array] = {
 		{"key": "dropShadowSize", "kind": Kind.NUMBER},
 	],
 	"Text": [
-		{"key": "fontname", "kind": Kind.STRING},
+		path_prop("fontname", "data:font", "data:font", _font_entries, Callable(), _font_value),
 		{"key": "horzAlign", "kind": Kind.ENUM, "options": ["Left", "Centre", "Right"]},
 		{"key": "vertAlign", "kind": Kind.ENUM, "options": ["Top", "Centre", "Bottom"]},
 		{"key": "dropShadow", "kind": Kind.BOOL},
