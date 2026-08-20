@@ -82,6 +82,7 @@ func setup_content(content: String, loader: ModResourceLoader) -> void:
 	parser.load_common_data()
 	parser.load(content)
 	parser.setup_view(ui_screen)
+	PropRow.set_palette(ui_screen.common_colors)
 	element_tree.clear()
 	var root := element_tree.create_item()
 	for c in ui_screen.get_children():
@@ -259,19 +260,24 @@ func _on_widget_selection_edit_ended() -> void:
 	)
 	undo_redo.commit_action()
 
-func _set_own_value(widget: UiScreen.Widget, key: String, value: Variant, has_value: bool, action_name: String) -> void:
+func _set_own_value(widget: UiScreen.Widget, key: String, value: Variant, has_value: bool, action_name: String, pair := "") -> void:
 	var raw := widget.config.get_raw()
 	var had: bool = key in raw
 	var old = raw.get(key)
+	if pair != "" and (pair in raw or not has_value):
+		pair = ""
+	var pair_value: Variant = value.duplicate(true) if value is Array or value is Dictionary else value
 	undo_redo.create_action(action_name)
 	undo_redo.add_do_method(func ():
 		if has_value: widget.config.set_value(key, value)
 		else: widget.config.erase(key)
+		if pair != "": widget.config.set_value(pair, pair_value)
 		_after_widget_config_change(widget, key)
 	)
 	undo_redo.add_undo_method(func ():
 		if had: widget.config.set_value(key, old)
 		else: widget.config.erase(key)
+		if pair != "": widget.config.erase(pair)
 		_after_widget_config_change(widget, key)
 	)
 	undo_redo.commit_action()
@@ -286,7 +292,8 @@ func _after_widget_config_change(widget: UiScreen.Widget, key: String) -> void:
 	widget.emit_signal("update")
 
 func _on_prop_changed(key: String, value: Variant) -> void:
-	_set_own_value(selected_widget, key, value, true, "Set %s" % key)
+	var descriptors := ScreenPropDefs.widget_props(selected_widget.get_effective_config().get_str("type"))
+	_set_own_value(selected_widget, key, value, true, "Set %s" % key, ScreenPropDefs.pair_of(descriptors, key))
 
 func _on_prop_removed(key: String) -> void:
 	_set_own_value(selected_widget, key, null, false, "Reset %s" % key)
@@ -609,14 +616,22 @@ func _on_item_prop_changed(index: int, key: String, value: Variant, tab: ItemLis
 	var item: Dictionary = tab.display_items()[index]
 	var had: bool = key in item
 	var old = item.get(key)
+	var item_type := str(item.get("type", ""))
+	var descriptors := ScreenPropDefs.art_props(item_type) if tab.kind == ItemListTab.ItemKind.ART else ScreenPropDefs.hit_props(item_type)
+	var pair := ScreenPropDefs.pair_of(descriptors, key)
+	if pair != "" and pair in item:
+		pair = ""
+	var pair_value: Variant = value.duplicate(true) if value is Array or value is Dictionary else value
 	undo_redo.create_action("Set item %s" % key)
 	undo_redo.add_do_method(func ():
 		item[key] = value
+		if pair != "": item[pair] = pair_value
 		_after_item_change(tab, widget)
 	)
 	undo_redo.add_undo_method(func ():
 		if had: item[key] = old
 		else: item.erase(key)
+		if pair != "": item.erase(pair)
 		_after_item_change(tab, widget)
 	)
 	undo_redo.commit_action()
@@ -640,7 +655,7 @@ func _on_item_prop_removed(index: int, key: String, tab: ItemListTab) -> void:
 
 func _on_item_added(type: String, tab: ItemListTab) -> void:
 	var widget := tab.widget
-	var config := ScreenPropDefs.item_template(type) if tab.kind == ItemListTab.ItemKind.ART else {"type": type, "position": [0.0, 0.0], "size": [1.0, 1.0]}
+	var config := ScreenPropDefs.item_template(type) if tab.kind == ItemListTab.ItemKind.ART else ScreenPropDefs.hit_template(type)
 	undo_redo.create_action("Add item")
 	undo_redo.add_do_method(func ():
 		var items := _own_items(widget, tab)

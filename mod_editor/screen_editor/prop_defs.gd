@@ -11,9 +11,9 @@ enum Kind {
 }
 
 const WIDGET_TYPES: Array[String] = [
-	"ArtLabel", "Button", "CheckButton", "ComboBox", "Custom", "CustomListBox",
-	"CustomListBoxItem", "EditText", "Group", "ProgressBar", "RadioButton",
-	"ScrollBar", "Swf", "TextLabel", "TextListBox", "TextListBoxItem",
+	"ArtLabel", "Button", "CheckButton", "ComboBox", "Component", "Custom",
+	"CustomListBox", "CustomListBoxItem", "EditText", "Group", "ProgressBar",
+	"RadioButton", "ScrollBar", "Swf", "TextLabel", "TextListBox", "TextListBoxItem",
 ]
 
 ## Descriptor for a prop mirrored onto a real Control attribute: "apply" is
@@ -30,6 +30,9 @@ static var WIDGET_COMMON: Array[Dictionary] = [
 	control_prop("visible", Kind.BOOL, func (w: UiScreen.Widget, v: Variant): w.visible = v, true),
 	control_prop("Clip", Kind.BOOL, func (w: UiScreen.Widget, v: Variant): w.clip_contents = v, false),
 	control_prop("alpha", Kind.NUMBER, func (w: UiScreen.Widget, v: Variant): w.modulate.a = v, 1.0),
+	{"key": "enabled", "kind": Kind.BOOL, "default": true},
+	{"key": "tooltip_name", "kind": Kind.STRING},
+	{"key": "tooltip_text", "kind": Kind.STRING},
 ]
 
 ## Extra props per widget type; the raw config keeps any keys not listed here.
@@ -41,15 +44,20 @@ const WIDGET_EXTRA: Dictionary[String, Array] = {
 	"Button": [
 		{"key": "text", "kind": Kind.STRING},
 		{"key": "buttonType", "kind": Kind.ENUM, "options": ["ClickOnPress", "ClickOnRelease"]},
+		{"key": "wantAlternate", "kind": Kind.BOOL},
 	],
 	"CheckButton": [{"key": "text", "kind": Kind.STRING}],
-	"RadioButton": [{"key": "text", "kind": Kind.STRING}],
+	"RadioButton": [
+		{"key": "text", "kind": Kind.STRING},
+		{"key": "wantAlternate", "kind": Kind.BOOL},
+	],
+	"Swf": [{"key": "swf", "kind": Kind.STRING}],
 	"EditText": [
 		{"key": "text", "kind": Kind.STRING},
 		{"key": "multiline", "kind": Kind.BOOL},
 		{"key": "maxTextLength", "kind": Kind.NUMBER},
-		{"key": "caretColourTop", "kind": Kind.COLOR},
-		{"key": "caretColourBottom", "kind": Kind.COLOR},
+		{"key": "caretColourTop", "kind": Kind.COLOR, "pair": "caretColourBottom"},
+		{"key": "caretColourBottom", "kind": Kind.COLOR, "pair": "caretColourTop"},
 	],
 	"ProgressBar": [
 		{"key": "range", "kind": Kind.NUMBER},
@@ -77,7 +85,7 @@ const PARENT_SLOTS: Dictionary[String, Array] = {
 	"ScrollBar": [UiScreen.Slot.ButtonIncrement, UiScreen.Slot.ButtonDecrement, UiScreen.Slot.ButtonTrack],
 }
 
-const ART_TYPES: Array[String] = ["Graphic", "Text", "Rectangle", "Line"]
+const ART_TYPES: Array[String] = ["Graphic", "Text", "Rectangle", "Line", "Triangle"]
 
 const ART_COMMON: Array[Dictionary] = [
 	{"key": "type", "kind": Kind.ENUM, "options": ART_TYPES},
@@ -91,14 +99,17 @@ const ART_EXTRA: Dictionary[String, Array] = {
 		{"key": "texture", "kind": Kind.STRING},
 		{"key": "flipVertical", "kind": Kind.BOOL},
 		{"key": "flipHorizontal", "kind": Kind.BOOL},
+		{"key": "isTextureStatic", "kind": Kind.BOOL},
+		{"key": "dropShadowSize", "kind": Kind.NUMBER},
 	],
 	"Text": [
 		{"key": "fontname", "kind": Kind.STRING},
 		{"key": "horzAlign", "kind": Kind.ENUM, "options": ["Left", "Centre", "Right"]},
 		{"key": "vertAlign", "kind": Kind.ENUM, "options": ["Top", "Centre", "Bottom"]},
 		{"key": "dropShadow", "kind": Kind.BOOL},
-		{"key": "textColourTop", "kind": Kind.COLOR},
-		{"key": "textColourBottom", "kind": Kind.COLOR},
+		{"key": "padding", "kind": Kind.VEC2},
+		{"key": "textColourTop", "kind": Kind.COLOR, "pair": "textColourBottom"},
+		{"key": "textColourBottom", "kind": Kind.COLOR, "pair": "textColourTop"},
 	],
 	"Rectangle": [
 		{"key": "colour", "kind": Kind.COLOR},
@@ -109,16 +120,28 @@ const ART_EXTRA: Dictionary[String, Array] = {
 		{"key": "p2", "kind": Kind.VEC2},
 		{"key": "colour", "kind": Kind.COLOR},
 	],
+	"Triangle": [
+		{"key": "p1", "kind": Kind.VEC2},
+		{"key": "p2", "kind": Kind.VEC2},
+		{"key": "p3", "kind": Kind.VEC2},
+		{"key": "colour", "kind": Kind.COLOR},
+	],
 }
 
-const HIT_TYPES: Array[String] = ["Rectangle"]
+const HIT_TYPES: Array[String] = ["Rectangle", "Triangle"]
 
 const HIT_COMMON: Array[Dictionary] = [
 	{"key": "position", "kind": Kind.VEC2},
 	{"key": "size", "kind": Kind.VEC2},
 ]
 
-const HIT_EXTRA: Dictionary[String, Array] = {}
+const HIT_EXTRA: Dictionary[String, Array] = {
+	"Triangle": [
+		{"key": "p1", "kind": Kind.VEC2},
+		{"key": "p2", "kind": Kind.VEC2},
+		{"key": "p3", "kind": Kind.VEC2},
+	],
+}
 
 static func widget_props(type: String) -> Array[Dictionary]:
 	var res: Array[Dictionary] = []
@@ -138,6 +161,13 @@ static func hit_props(type: String) -> Array[Dictionary]:
 	res.append_array(HIT_EXTRA.get(type, []))
 	return res
 
+## The key that must exist together with `key` ("" if none).
+static func pair_of(descriptors: Array[Dictionary], key: String) -> String:
+	for descriptor in descriptors:
+		if descriptor["key"] == key:
+			return descriptor.get("pair", "")
+	return ""
+
 static func parent_slots(parent_type: String) -> Array:
 	return PARENT_SLOTS.get(parent_type, UiScreen.Slot.values())
 
@@ -146,7 +176,13 @@ static func item_template(type: String) -> Dictionary:
 		"Graphic": return {"type": "Graphic", "position": [0.0, 0.0], "size": [1.0, 1.0], "texture": "", "states": ["Normal", "Hover", "Active", "Disabled"]}
 		"Text": return {"type": "Text", "position": [0.0, 0.0], "size": [1.0, 1.0], "states": ["Normal", "Hover", "Active", "Disabled"]}
 		"Line": return {"type": "Line", "position": [0.0, 0.0], "size": [1.0, 1.0], "p1": [0.0, 0.0], "p2": [1.0, 1.0], "colour": [255, 255, 255, 255], "states": ["Normal", "Hover", "Active", "Disabled"]}
+		"Triangle": return {"type": "Triangle", "position": [0.0, 0.0], "size": [1.0, 1.0], "p1": [0.0, 0.0], "p2": [1.0, 0.0], "p3": [0.5, 1.0], "colour": [255, 255, 255, 255], "states": ["Normal", "Hover", "Active", "Disabled"]}
 		"Rectangle", _: return {"type": "Rectangle", "position": [0.0, 0.0], "size": [1.0, 1.0], "colour": [255, 255, 255, 255], "states": ["Normal", "Hover", "Active", "Disabled"]}
+
+static func hit_template(type: String) -> Dictionary:
+	match type:
+		"Triangle": return {"type": "Triangle", "p1": [0.0, 0.0], "p2": [1.0, 0.0], "p3": [0.5, 1.0]}
+		"Rectangle", _: return {"type": "Rectangle", "position": [0.0, 0.0], "size": [1.0, 1.0]}
 
 static func default_value(descriptor: Dictionary) -> Variant:
 	if "default" in descriptor:

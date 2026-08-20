@@ -100,7 +100,7 @@ func sync_display(keep_selection: bool = false) -> void:
 		match item_config.get_str("type"):
 			"Graphic": label += "  %s" % item_config.get_str("texture").get_file()
 			"Text": label += "  %s" % item_config.get_str("fontname")
-		_list.add_item(label)
+		_list.add_item(label, item_config.get_array("states") if kind == ItemKind.ART else null)
 	_override_button.visible = editable and widget != null and not is_own()
 	_list.reorder_enabled = own
 	if _fill_button != null:

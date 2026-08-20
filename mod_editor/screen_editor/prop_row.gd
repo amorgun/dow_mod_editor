@@ -12,6 +12,23 @@ var descriptor: Dictionary
 var key: String
 var _editor: Control = null
 var _last_value: Variant = null
+var _color_popup: PopupPanel = null
+var _color_picker: ColorPicker = null
+
+static var _palette_colors: Dictionary = {}
+static var _palette_names: Array = []
+static var _palette_icons: Dictionary = {}
+
+## Named colours from the screen's .colours tables; icons cached per file open.
+static func set_palette(colors: Dictionary) -> void:
+	_palette_colors = colors
+	_palette_names = colors.keys()
+	_palette_names.sort()
+	_palette_icons.clear()
+	for color_name in _palette_names:
+		var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+		img.fill(colors[color_name])
+		_palette_icons[color_name] = ImageTexture.create_from_image(img)
 
 func _init(descriptor_: Dictionary) -> void:
 	descriptor = descriptor_
@@ -60,6 +77,25 @@ func _emit_changed(value: Variant) -> void:
 	_last_value = value
 	call_deferred("emit_signal", "changed", key, value)
 
+func _popup_color_picker(anchor: Control) -> void:
+	if _color_popup == null:
+		_color_popup = PopupPanel.new()
+		_color_picker = ColorPicker.new()
+		_color_popup.add_child(_color_picker)
+		add_child(_color_popup)
+		_color_popup.popup_hide.connect(func ():
+			var c := _color_picker.color
+			_emit_changed([
+				int(round(c.r * 255)), int(round(c.g * 255)),
+				int(round(c.b * 255)), int(round(c.a * 255)),
+			])
+		)
+	if _last_value is Array and len(_last_value) == 4:
+		_color_picker.color = Color.from_rgba8(_last_value[0], _last_value[1], _last_value[2], _last_value[3])
+	elif _last_value is String:
+		_color_picker.color = _palette_colors.get(_last_value, Color.WHITE)
+	_color_popup.popup(Rect2i(Vector2i(anchor.get_screen_position()) + Vector2i(0, int(anchor.size.y)), Vector2i.ZERO))
+
 static func _states_text(states: Array) -> String:
 	var letters := PackedStringArray()
 	for s in STATE_NAMES:
@@ -104,16 +140,22 @@ func _make_editor(editable: bool) -> Control:
 			check.toggled.connect(func (val: bool): _emit_changed(val))
 			res = check
 		ScreenPropDefs.Kind.COLOR:
-			var picker := ColorPickerButton.new()
-			picker.disabled = not editable
-			picker.popup_closed.connect(func ():
-				var c := picker.color
-				_emit_changed([
-					int(round(c.r * 255)), int(round(c.g * 255)),
-					int(round(c.b * 255)), int(round(c.a * 255)),
-				])
+			var options := OptionButton.new()
+			options.disabled = not editable
+			options.clip_text = true
+			options.add_item("Custom")
+			for color_name in _palette_names:
+				options.add_icon_item(_palette_icons[color_name], color_name)
+			var popup := options.get_popup()
+			for i in popup.get_item_count():
+				popup.set_item_as_radio_checkable(i, false)
+			options.item_selected.connect(func (idx: int):
+				if idx == 0:
+					_popup_color_picker(options)
+				else:
+					_emit_changed(_palette_names[idx - 1])
 			)
-			res = picker
+			res = options
 		ScreenPropDefs.Kind.VEC2:
 			var box := HBoxContainer.new()
 			for i in 2:
@@ -168,10 +210,8 @@ func _set_editor_value(value: Variant) -> void:
 		ScreenPropDefs.Kind.BOOL:
 			_editor.set_pressed_no_signal(bool(value))
 		ScreenPropDefs.Kind.COLOR:
-			if value is Array and len(value) == 4:
-				_editor.color = Color.from_rgba8(value[0], value[1], value[2], value[3])
-			elif value is String:
-				_editor.tooltip_text = value  # named colour from the .colours table
+			var idx: int = _palette_names.find(value) if value is String else -1
+			_editor.select(idx + 1)
 		ScreenPropDefs.Kind.VEC2:
 			if value is Array and len(value) == 2:
 				_editor.get_child(0).text = _fmt(value[0])

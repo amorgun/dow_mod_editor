@@ -15,12 +15,24 @@ class Blob extends PanelContainer:
 	var list: ItemBlobList
 	var label: Label
 
-	func _init(list_: ItemBlobList, text: String) -> void:
+	func _init(list_: ItemBlobList, text: String, states: Variant) -> void:
 		list = list_
+		var box := HBoxContainer.new()
+		add_child(box)
 		label = Label.new()
 		label.text = text
 		label.clip_text = true
-		add_child(label)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(label)
+		if states is Array:
+			# fixed-width per-state cells so the blobs line up like a table
+			for s in PropRow.STATE_NAMES:
+				var cell := Label.new()
+				cell.text = s[0]
+				cell.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				cell.custom_minimum_size.x = 14
+				cell.modulate = Color(1, 1, 1, 1.0 if s in states else 0.2)
+				box.add_child(cell)
 
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -61,8 +73,8 @@ func clear() -> void:
 		_box.remove_child(c)
 		c.queue_free()
 
-func add_item(text: String) -> void:
-	var blob := Blob.new(self, text)
+func add_item(text: String, states: Variant = null) -> void:
+	var blob := Blob.new(self, text, states)
 	blob.add_theme_stylebox_override("panel", _style_normal)
 	_box.add_child(blob)
 
