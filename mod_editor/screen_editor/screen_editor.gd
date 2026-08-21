@@ -27,9 +27,12 @@ var _color_art_select: Color
 var _color_hit_area: Color
 var _color_hit_fit: Color
 
+@onready var close_confirm: ConfirmationDialog = $CloseConfirm
+
 var undo_redo := UndoRedo.new()
 var selected_widget: UiScreen.Widget
 var _selected_editable := true
+var _saved_version := 1
 
 static var _widget_clipboard: Dictionary = {}
 static var _item_clipboard: Dictionary = {}
@@ -41,7 +44,10 @@ var _index_file: ModInfo.IndexFile = null
 signal close
 
 func _on_close_button_pressed() -> void:
-	close.emit()
+	if undo_redo.get_version() != _saved_version:
+		close_confirm.popup_centered()
+	else:
+		close.emit()
 
 var _view_ratios: Array = []
 
@@ -74,6 +80,13 @@ func _ready() -> void:
 		gizmo.resize_started.connect(_update_snap_lines)
 	item_selection.interactive_dragged.connect(_on_item_select_update)
 	item_selection.interactive_resized.connect(_on_item_select_update)
+	close_confirm.add_button("Close Anyway", true, "close_anyway")
+	close_confirm.confirmed.connect(func ():
+		_save()
+		close.emit())
+	close_confirm.custom_action.connect(func (_action: StringName):
+		close_confirm.hide()
+		close.emit())
 	widget_props.guides_tab.hide_all_toggled.connect(func (hidden: bool): guide_lines.visible = not hidden)
 	for tab in [widget_props.art_tab, widget_props.hit_tab, widget_props.guides_tab]:
 		tab.item_selected.connect(_on_item_selected.bind(tab))
@@ -154,6 +167,7 @@ func setup_content(content: String, loader: ModResourceLoader, mod_info: ModInfo
 	widget_props.reset_style_cache()
 	widget_props.set_widget(null, true)
 	undo_redo.clear_history()
+	_saved_version = undo_redo.get_version()
 	_pick_stack = []
 	if ui_screen.main_widget != null:
 		_select_row(ui_screen.main_widget)
@@ -621,6 +635,7 @@ func _save() -> void:
 		return
 	var result := Core.set_text(_index_file, ScreenParser.serialize_view(ui_screen))
 	if result.ok:
+		_saved_version = undo_redo.get_version()
 		GsqLogger.info("Screen saved: %s", [_index_file.name])
 	else:
 		GsqLogger.info("Screen save failed: %s", [result.error])

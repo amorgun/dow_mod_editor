@@ -858,6 +858,7 @@ selection_enabled = true
 
 [connection signal="file_selected" from="FileDialog" to="." method="_on_mod_file_selected"]
 [connection signal="close" from="ScreenEditor" to="." method="_on_screen_editor_close"]
+[connection signal="close" from="ScreenEditor" to="SplitContainer/VSplitMessages/FileBrowser" method="reload_preview"]
 [connection signal="id_pressed" from="SplitContainer/MenuBar/File" to="." method="_on_file_id_pressed"]
 [connection signal="id_pressed" from="SplitContainer/MenuBar/Edit" to="." method="_on_edit_id_pressed"]
 [connection signal="close_requested" from="SplitContainer/MenuBar/Edit/PreferencesPopup" to="SplitContainer/MenuBar/Edit/PreferencesPopup" method="_on_close"]

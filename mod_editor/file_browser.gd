@@ -101,11 +101,12 @@ func _on_text_reload(preview: PreviewWindow) -> void:
 	preview.text_content.text = preview.context.compiled_text
 	preview.text_content.push_autosave()
 
+## Reloads the preview of the currently viewed file from its current bytes.
+func reload_preview() -> void:
+	var context := current_preview.context
+	if context.tree_item != null:
+		_on_file_tree_item_viewed(context.mod_path, context.mod_info, context.index_file, context.tree_item, true)
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("refresh"):
-		var preview := current_preview
-		if preview == null:
-			return
-		var context := preview.context
-		if context.tree_item != null:
-			_on_file_tree_item_viewed(context.mod_path, context.mod_info, context.index_file, context.tree_item, true)
+	if event.is_action_pressed("refresh") and current_preview != null:
+		reload_preview()

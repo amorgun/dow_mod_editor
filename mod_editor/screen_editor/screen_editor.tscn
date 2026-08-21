@@ -251,6 +251,12 @@ script = ExtResource("6_itemt")
 kind = 2
 metadata/_tab_index = 3
 
+[node name="CloseConfirm" type="ConfirmationDialog" parent="." unique_id=1342771015]
+title = "Close Screen Editor"
+dialog_text = "You have unsaved changes."
+ok_button_text = "Save and Close"
+cancel_button_text = "Don't Close"
+
 [connection signal="pressed" from="VBoxContainer/TopBar/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="item_selected" from="VBoxContainer/TopBar/Mode" to="." method="_on_mode_selected"]
 [connection signal="pressed" from="VBoxContainer/TopBar/ResetView" to="." method="_on_reset_view_pressed"]
