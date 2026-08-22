@@ -1,5 +1,31 @@
 class_name ModViewerSettings extends Node
 
+enum Language {
+	ENGLISH,
+	FRENCH,
+	GERMAN,
+	SPANISH,
+	RUSSIAN,
+}
+
+## ModSet lang / Locale folder name per language.
+const LANGUAGE_FOLDERS: Dictionary[Language, String] = {
+	Language.ENGLISH: "english",
+	Language.FRENCH: "french",
+	Language.GERMAN: "german",
+	Language.SPANISH: "spanish",
+	Language.RUSSIAN: "russian",
+}
+
+## Godot locale code per language.
+const LANGUAGE_LOCALES: Dictionary[Language, String] = {
+	Language.ENGLISH: "en",
+	Language.FRENCH: "fr",
+	Language.GERMAN: "de",
+	Language.SPANISH: "es",
+	Language.RUSSIAN: "ru",
+}
+
 var config_module_path: String = ""
 var shadow_folder: String = "_SHADOW"
 var blender_path: String = ""
@@ -9,6 +35,20 @@ var extra_lookup_folders: PackedStringArray = []
 var max_preview_tabs: int = 0
 var data: ModResourceLoader
 var save_history := true
+var mod_language := Language.ENGLISH
+var editor_language := Language.ENGLISH
+
+
+static func language_folder(lang: Language) -> String:
+	return LANGUAGE_FOLDERS[lang]
+
+
+static func language_locale(lang: Language) -> String:
+	return LANGUAGE_LOCALES[lang]
+
+
+static func language_from_folder(folder: String) -> Language:
+	return LANGUAGE_FOLDERS.find_key(folder) if folder in LANGUAGE_FOLDERS.values() else Language.ENGLISH
 
 
 func _ready() -> void:

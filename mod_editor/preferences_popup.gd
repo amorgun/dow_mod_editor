@@ -4,6 +4,8 @@ extends Window
 const BUTTONS_GROUP = preload("uid://f6d83aqhyqfw")
 
 @onready var config_mod: OptionButton = $HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ConfigMod/Value
+@onready var mod_language: OptionButton = $HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ModLanguage
+@onready var editor_language: OptionButton = $HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/EditorLanguage
 @onready var num_last_tabs: SpinBox = $HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LastTabs/Value
 @onready var shadow_folder: LineEdit = $HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ShadowFolder
 @onready var lookup_folders: VBoxContainer = $HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders
@@ -28,6 +30,9 @@ func _ready() -> void:
 	tab_buttons.get_child(0).button_pressed = true
 	if OS.has_feature("windows"):
 		blender_file_dialog.filters = ["*.exe"]
+	for lang: ModViewerSettings.Language in ModViewerSettings.Language.values():
+		mod_language.add_item(ModViewerSettings.language_folder(lang).capitalize())
+		editor_language.add_item(ModViewerSettings.language_folder(lang).capitalize())
 
 func load_state() -> void:
 	var config := Settings.get_config()
@@ -52,12 +57,16 @@ func load_state() -> void:
 		child.path.text = f
 		child.visible = true
 	blender_path.text = config.get_value("global", "blender_path", "")
+	mod_language.select(ModViewerSettings.language_from_folder(config.get_value("global", "mod_language", "english")))
+	editor_language.select(ModViewerSettings.language_from_folder(config.get_value("global", "editor_language", "english")))
 
 func save_state():
 	var config := Settings.get_config()
 	config.set_value("global", "currentmoddc", config_mod.get_item_text(config_mod.selected))
 	config.set_value("global", "max_preview_tabs", num_last_tabs.value)
 	config.set_value("global", "shadow_folder", shadow_folder.text.strip_edges())
+	config.set_value("global", "mod_language", ModViewerSettings.language_folder(mod_language.selected))
+	config.set_value("global", "editor_language", ModViewerSettings.language_folder(editor_language.selected))
 	var extra_lookup_folders: Array = []
 	for i in lookup_folders.get_child_count() - 2:
 		var path: String = lookup_folders.get_child(i + 1).path.text.strip_edges()

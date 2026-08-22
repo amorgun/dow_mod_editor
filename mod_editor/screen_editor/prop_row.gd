@@ -56,16 +56,16 @@ func setup(own_value: Variant, has_own: bool, style_value: Variant, has_style: b
 		_set_editor_value(own_value)
 		_last_value = own_value
 		if allow_actions:
-			_add_action_button("Reset", func (): call_deferred("emit_signal", "reset_requested", key))
+			_add_action_button("$20", func (): call_deferred("emit_signal", "reset_requested", key))
 	elif has_style:
 		_editor = _make_editor(false)
 		_set_editor_value(style_value)
 		_last_value = style_value
 		if allow_actions:
-			_add_action_button("Override", func (): call_deferred("emit_signal", "override_requested", key))
+			_add_action_button("$19", func (): call_deferred("emit_signal", "override_requested", key))
 	else:
 		if allow_actions:
-			_add_action_button("Add", func (): call_deferred("emit_signal", "add_requested", key))
+			_add_action_button("$16", func (): call_deferred("emit_signal", "add_requested", key))
 		var spacer := Control.new()
 		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		add_child(spacer)
@@ -183,7 +183,7 @@ func _make_editor(editable: bool) -> Control:
 			var options := OptionButton.new()
 			options.disabled = not editable
 			options.clip_text = true
-			options.add_item("Custom")
+			options.add_item("$21")
 			for color_name in _palette_names:
 				options.add_icon_item(_palette_icons[color_name], color_name)
 			var popup := options.get_popup()

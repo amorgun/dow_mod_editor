@@ -59,8 +59,8 @@ func _ready() -> void:
 		if item is Dictionary:
 			_view_ratios.append(SafeDict.new(item))
 			view_ratio_option.add_item(_view_ratios[-1].get_str("name", "?"))
-	view_ratio_option.add_item("Responsive")
-	screen_ratio_option.add_item("Default")
+	view_ratio_option.add_item("$15")
+	screen_ratio_option.add_item("$14")
 	for ratio in _view_ratios:
 		screen_ratio_option.add_item(ratio.get_str("name", "?"))
 	ui_screen.default_ratio = view_config.get_value("aspect_ratio", 4.0 / 3, TYPE_FLOAT)
@@ -80,7 +80,7 @@ func _ready() -> void:
 		gizmo.resize_started.connect(_update_snap_lines)
 	item_selection.interactive_dragged.connect(_on_item_select_update)
 	item_selection.interactive_resized.connect(_on_item_select_update)
-	close_confirm.add_button("Close Anyway", true, "close_anyway")
+	close_confirm.add_button(tr("$12"), true, "close_anyway")
 	close_confirm.confirmed.connect(func ():
 		_save()
 		close.emit())

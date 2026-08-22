@@ -1,8 +1,8 @@
 diff --git a/formats/screen.gd b/formats/screen.gd
-index 532d3a9..1a46d17 100755
+index 532d3a9..058aa31 100755
 --- a/formats/screen.gd
 +++ b/formats/screen.gd
-@@ -1,7 +1,12 @@
+@@ -1,11 +1,17 @@
  class_name ScreenParser
  
 +const SCREEN_VERSION := 4
@@ -15,7 +15,19 @@ index 532d3a9..1a46d17 100755
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -54,7 +59,9 @@ func load(text: String) -> bool:
+ var common_fonts: Dictionary[String, Dictionary] = {}
++var translator: UcsTranslator = null
+ var widgets_info: Dictionary[String, SafeDict] = {}
+ const COMMON_STYLES_ROOT = "data:art/ui/styles"
+ const FONTS_ROOT = "data:font"
+@@ -48,13 +54,16 @@ func load_common_data() -> void:
+ 	for file in mod.plist_files(FONTS_ROOT):
+ 		if file.ends_with(".fnt"):
+ 			common_fonts[file.get_basename()] = mod.pload_font(FONTS_ROOT.path_join(file))
++	translator = UcsTranslator.create(mod)
+ 
+ func load(text: String) -> bool:
+ 	config_root = Lua.new()
  	if config_root.dostring(text) != Error.OK:
  		parse_error = config_root.get_error()
  		return false
@@ -25,7 +37,7 @@ index 532d3a9..1a46d17 100755
  	var info_config := SafeDict.new(info_root)
  	var widget_info_config := info_config.get_safe_array("WidgetInfo")
  	widgets_info.clear()
-@@ -62,6 +69,58 @@ func load(text: String) -> bool:
+@@ -62,17 +71,76 @@ func load(text: String) -> bool:
  		widgets_info[i.get_str("name")] = i
  	return true
  
@@ -84,7 +96,10 @@ index 532d3a9..1a46d17 100755
  func setup_view(root: UiScreen) -> void:
  	root.mod = mod
  	root.common_colors = common_colors
-@@ -71,8 +130,14 @@ func setup_view(root: UiScreen) -> void:
+ 	root.common_styles = common_styles
+ 	root.common_fonts = common_fonts
+ 	root.widgets_info = widgets_info
++	root.translator = translator
  	
  	var screen_root: Dictionary = config_root.get_value("Screen", {}, TYPE_DICTIONARY)
  	var screen_config := SafeDict.new(screen_root)
@@ -103,6 +118,72 @@ index 532d3a9..1a46d17 100755
 +		root.tooltip_widget = root.build_widget_from_config(screen_config.get_dict("TooltipWidgets"))
 +		root.widget_root.add_child(root.tooltip_widget)
 +		root.widget_root.add_child(root.tooltip_widget.hitbox)
+diff --git a/formats/ucs.gd b/formats/ucs.gd
+new file mode 100755
+index 0000000..63699a7
+--- /dev/null
++++ b/formats/ucs.gd
+@@ -0,0 +1,60 @@
++## DoW translation catalog built from a mod set's .ucs locale files.
++class_name UcsTranslator extends RefCounted
++
++var entries: Dictionary[int, String] = {}
++
++## Builds the catalog with id-level mod precedence: every ucs file of the
++## mod's own locale folder loads first, then each required mod (in order)
++## contributes only ids not seen yet. Mods add new ucs files rather than
++## override existing ones, so precedence applies per id, not per file.
++static func create(loader: ModResourceLoader) -> UcsTranslator:
++	var res := UcsTranslator.new()
++	var root := ModSet.ModPath.from_path("locale:")
++	for source in loader.mod.sources:
++		if source.root_folder_name != "locale" or not source.exists:
++			continue
++		var names: Array = []
++		for f in (source.get_files_packed(root) if source.packed else source.get_files_unpacked(root)):
++			if f.get_extension().to_lower() == "ucs":
++				names.append(f)
++		names.sort()
++		for f in names:
++			for location in loader.mod.get_all_file_locations("locale", f):
++				if location.source == source:
++					res._parse(location.read_bytes())
++					break
++	return res
++
++## Lines are "id<whitespace>text"; an id alone means empty text; any line
++## whose first token is not an int (comments included) is skipped.
++func _parse(bytes: PackedByteArray) -> void:
++	for line in bytes.get_string_from_utf16().split("\n"):
++		line = line.trim_suffix("\r")
++		var sep := line.length()
++		for i in line.length():
++			if line[i] == "\t" or line[i] == " ":
++				sep = i
++				break
++		var id_str := line.substr(0, sep)
++		if not id_str.is_valid_int():
++			continue
++		var id := int(id_str)
++		if id not in entries:
++			entries[id] = line.substr(sep).lstrip(" \t")
++
++## "$<id>" becomes its catalog text; no match or any other string stays as is.
++func translate(s: String) -> String:
++	if not s.begins_with("$"):
++		return s
++	var id_str := s.substr(1)
++	if not id_str.is_valid_int():
++		return s
++	return entries.get(int(id_str), s)
++
++## The catalog as a Godot Translation ("$id" message ids) for TranslationServer.
++func make_translation(locale: String) -> Translation:
++	var result := Translation.new()
++	result.locale = locale
++	for id in entries:
++		result.add_message("$%d" % id, entries[id])
++	return result
 diff --git a/mod_set.gd b/mod_set.gd
 index 88c0ec2..e4965be 100755
 --- a/mod_set.gd
@@ -279,10 +360,10 @@ index 0000000..176f0ed
 +grow_vertical = 2
 +mouse_filter = 2
 diff --git a/ui_screeen/ui_screeen.gd b/ui_screeen/ui_screeen.gd
-index 44cf447..e075af3 100755
+index 44cf447..e6f6d7c 100755
 --- a/ui_screeen/ui_screeen.gd
 +++ b/ui_screeen/ui_screeen.gd
-@@ -1,7 +1,24 @@
+@@ -1,12 +1,35 @@
  class_name UiScreen extends Control
  
 +## Manual event routing: the top-most widget whose HitArea matches gets the event.
@@ -307,7 +388,18 @@ index 44cf447..e075af3 100755
  var mod: ModResourceLoader = null
  var common_colors: Dictionary[String, Color] = {}
  var common_styles: Dictionary[String, Dictionary] = {}
-@@ -82,12 +99,28 @@ class Widget extends Control:
+ var common_fonts: Dictionary[String, Dictionary] = {}
+ var widgets_info: Dictionary[String, SafeDict] = {}
++var translator: UcsTranslator = null
++
++## "$id" strings resolve through the mod set's ucs catalog; no match or no
++## catalog keeps the original string.
++func translate(s: String) -> String:
++	return translator.translate(s) if translator != null else s
+ 
+ enum WIDGET_STATE {
+ 	NORMAL = 1,
+@@ -82,12 +105,28 @@ class Widget extends Control:
  				c.visible = c.states & val
  			state = val
  	var hitbox: Control = null
@@ -337,7 +429,7 @@ index 44cf447..e075af3 100755
  
  	func _init() -> void:
  		mouse_filter = Control.MOUSE_FILTER_PASS
-@@ -109,26 +142,7 @@ class Widget extends Control:
+@@ -109,26 +148,7 @@ class Widget extends Control:
  		add_child(children_root)
  		hitbox = Control.new()
  		hitbox.name = "HitBox"
@@ -365,7 +457,7 @@ index 44cf447..e075af3 100755
  
  	func _get_style_config_raw() -> Dictionary:
  		var style_id := config.get_array("style")
-@@ -151,26 +165,24 @@ class Widget extends Control:
+@@ -151,26 +171,24 @@ class Widget extends Control:
  		#res.mouse_filter = Control.MOUSE_FILTER_PASS
  		match type:
  			"Graphic":
@@ -409,7 +501,7 @@ index 44cf447..e075af3 100755
  				res.add_child(node)
  			"Text":
  				var node := Label.new()
-@@ -234,6 +246,7 @@ class Widget extends Control:
+@@ -234,6 +252,7 @@ class Widget extends Control:
  				res.add_child(node)
  		for c in res.get_children():
  			c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -417,7 +509,7 @@ index 44cf447..e075af3 100755
  		for s in config.get_array("states"):
  			res.states |= {
  				"Normal": UiScreen.WIDGET_STATE.NORMAL,
-@@ -274,9 +287,10 @@ class Widget extends Control:
+@@ -274,12 +293,13 @@ class Widget extends Control:
  
  		_set_anchors(self, relative_pos, relative_size)
  
@@ -430,8 +522,12 @@ index 44cf447..e075af3 100755
 +				hit_rects.append(Rect2(c.get_vec2("position", Vector2.ZERO), c.get_vec2("size", Vector2.ONE)))
  		_set_anchors(hitbox, relative_pos, relative_size)
  	
- 		var node_text := effective_config.get_str("text")
-@@ -288,6 +302,8 @@ class Widget extends Control:
+-		var node_text := effective_config.get_str("text")
++		var node_text := screen.translate(effective_config.get_str("text"))
+ 		#name = effective_config.get_str("name", name)
+ 		#hitbox.name = name
+ 		for c in art_root.get_children():
+@@ -288,6 +308,8 @@ class Widget extends Control:
  		var presentation := effective_config.get_dict("Presentation")
  		for c in presentation.get_safe_array("Art"):
  			_add_art_item(c, node_text)
@@ -440,7 +536,7 @@ index 44cf447..e075af3 100755
  
  	func get_widget_slot(slot: Slot, type: SlotType) -> Widget:
  		var root := slot_roots[slot].get_child(type)
-@@ -306,9 +322,6 @@ class Widget extends Control:
+@@ -306,9 +328,6 @@ class Widget extends Control:
  class Art extends Control:
  	var states: WIDGET_STATE = 0
  
@@ -450,7 +546,7 @@ index 44cf447..e075af3 100755
  class GraphicArt extends Art:
  	var _img_node: TextureRect
  	var texture: Texture2D:
-@@ -420,8 +433,77 @@ class GraphicArt extends Art:
+@@ -420,8 +439,77 @@ class GraphicArt extends Art:
  			#_set_anchors(node, pos, size)
  			#root.add_child(node)
  
@@ -528,7 +624,7 @@ index 44cf447..e075af3 100755
  	res.screen = self
  	if parent != null:
  		res.parent_widget = parent
-@@ -430,7 +512,7 @@ func create_widget(parent: Widget = null) -> Widget:
+@@ -430,7 +518,7 @@ func create_widget(parent: Widget = null) -> Widget:
  
  func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScreen.Widget:
  	var widget := create_widget(parent)
@@ -537,7 +633,7 @@ index 44cf447..e075af3 100755
  	widget.config = config
  	widget.init_size()
  	widget.sync_display()
-@@ -442,7 +524,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -442,7 +530,6 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  	for s in Slot:
  		var prev: Widget = null
  		if style_config.has(s):
@@ -545,7 +641,7 @@ index 44cf447..e075af3 100755
  			var c := build_widget_from_config(style_config.get_dict(s), widget)
  			widget.set_widget_slot(c, Slot[s], SlotType.STYLE)
  			prev = c
-@@ -451,7 +532,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
+@@ -451,7 +538,7 @@ func build_widget_from_config(config: SafeDict, parent: Widget = null) -> UiScre
  			widget.set_widget_slot(c, Slot[s], SlotType.OWN)
  			if prev != null:
  				prev.visible = false

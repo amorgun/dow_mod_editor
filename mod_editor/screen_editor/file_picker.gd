@@ -28,7 +28,7 @@ var _icon_folder := ImageTexture.create_from_image(Settings.data.pload_svg("data
 var _icon_file := ImageTexture.create_from_image(Settings.data.pload_svg("data:art/ui/textures/File.svg", Color("e0e0e0")))
 
 func _init() -> void:
-	title = "Select File"
+	title = "$22"
 	min_size = Vector2i(720, 480)
 	var box := HSplitContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -38,7 +38,7 @@ func _init() -> void:
 	_path_edit.text_submitted.connect(_on_path_submitted)
 	left.add_child(_path_edit)
 	_search = LineEdit.new()
-	_search.placeholder_text = "Search"
+	_search.placeholder_text = "$23"
 	_search.clear_button_enabled = true
 	_search.text_changed.connect(func (_t: String): _render())
 	left.add_child(_search)

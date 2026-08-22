@@ -32,7 +32,7 @@ func _ready() -> void:
 	var toolbar := HBoxContainer.new()
 	add_child(toolbar)
 	var add_menu := MenuButton.new()
-	add_menu.text = "Add"
+	add_menu.text = "$16"
 	var add_popup := add_menu.get_popup()
 	var add_types: Array[String] = ScreenPropDefs.ART_TYPES
 	match kind:
@@ -44,11 +44,11 @@ func _ready() -> void:
 	toolbar.add_child(add_menu)
 	if kind == ItemKind.GUIDES:
 		var hide_all := CheckBox.new()
-		hide_all.text = "Hide all"
+		hide_all.text = "$18"
 		hide_all.button_pressed = true
 		hide_all.toggled.connect(func (pressed: bool): hide_all_toggled.emit(pressed))
 		toolbar.add_child(hide_all)
-	_override_button = _add_tool_button(toolbar, "Override", func (): override_requested.emit())
+	_override_button = _add_tool_button(toolbar, "$19", func (): override_requested.emit())
 
 	_list = ItemBlobList.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -58,7 +58,7 @@ func _ready() -> void:
 
 	if kind != ItemKind.GUIDES:
 		_fill_button = Button.new()
-		_fill_button.text = "Fill Widget"
+		_fill_button.text = "$17"
 		_fill_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		_fill_button.pressed.connect(func (): _emit_for_selection(fill_requested))
 		add_child(_fill_button)

@@ -37,8 +37,8 @@ script = ExtResource("2_psthy")
 metadata/_edit_horizontal_guides_ = [-9.0]
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=210939005]
-title = "Select a Mod file"
-ok_button_text = "Open"
+title = "$27"
+ok_button_text = "$28"
 mode_overrides_title = false
 file_mode = 0
 access = 2
@@ -65,22 +65,22 @@ layout_mode = 2
 
 [node name="File" type="PopupMenu" parent="SplitContainer/MenuBar" unique_id=871426792]
 item_count = 3
-item_0/text = "New Mod"
+item_0/text = "$61"
 item_0/id = 0
 item_0/disabled = true
-item_1/text = "Open Mod"
+item_1/text = "$62"
 item_1/id = 1
-item_2/text = "Exit"
+item_2/text = "$63"
 item_2/id = 2
 
 [node name="Edit" type="PopupMenu" parent="SplitContainer/MenuBar" unique_id=2064298130]
 item_count = 1
-item_0/text = "Preferences"
+item_0/text = "$26"
 item_0/id = 0
 
 [node name="PreferencesPopup" type="Window" parent="SplitContainer/MenuBar/Edit" unique_id=170846211]
 oversampling_override = 1.0
-title = "Preferences"
+title = "$26"
 initial_position = 4
 size = Vector2i(700, 500)
 visible = false
@@ -137,7 +137,7 @@ columns = 2
 [node name="Label" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=759436236]
 layout_mode = 2
 size_flags_vertical = 1
-text = "Config Mod "
+text = "$29"
 vertical_alignment = 1
 
 [node name="ConfigMod" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=168460813]
@@ -148,15 +148,33 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="ModLanguageLabel" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=759436237]
+layout_mode = 2
+text = "$24"
+vertical_alignment = 1
+
+[node name="ModLanguage" type="OptionButton" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=759436238]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EditorLanguageLabel" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=759436239]
+layout_mode = 2
+text = "$25"
+vertical_alignment = 1
+
+[node name="EditorLanguage" type="OptionButton" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=759436240]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="Button" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/ConfigMod" unique_id=60795670]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Open Folder"
+text = "$30"
 
 [node name="Label2" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=1305215534]
 layout_mode = 2
 size_flags_vertical = 1
-text = "Number of Kept Tabs "
+text = "$31"
 vertical_alignment = 1
 
 [node name="LastTabs" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=430401196]
@@ -172,7 +190,7 @@ select_all_on_focus = true
 [node name="Label3" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=329796573]
 layout_mode = 2
 size_flags_vertical = 1
-text = "Shadow Folder"
+text = "$32"
 vertical_alignment = 1
 
 [node name="ShadowFolder" type="LineEdit" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=1475768034]
@@ -183,7 +201,7 @@ select_all_on_focus = true
 [node name="Label4" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=306218960]
 layout_mode = 2
 size_flags_vertical = 1
-text = "Extra Lookup Folders"
+text = "$33"
 
 [node name="LookupFolders" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer" unique_id=681633977]
 layout_mode = 2
@@ -201,15 +219,15 @@ select_all_on_focus = true
 
 [node name="SelectButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=1781746218]
 layout_mode = 2
-text = "Pick"
+text = "$34"
 
 [node name="RemoveButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=431031352]
 layout_mode = 2
-text = "Remove"
+text = "$35"
 
 [node name="FileDialog" type="FileDialog" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders/Template" unique_id=433368237]
-title = "Select a Folder"
-ok_button_text = "Select"
+title = "$36"
+ok_button_text = "$37"
 mode_overrides_title = false
 file_mode = 2
 access = 2
@@ -219,7 +237,7 @@ use_native_dialog = true
 [node name="AddButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/General/GridContainer/LookupFolders" unique_id=15677418]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "+Add"
+text = "$38"
 
 [node name="Tools" type="MarginContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer" unique_id=378584230]
 visible = false
@@ -236,7 +254,7 @@ columns = 2
 
 [node name="Label" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=1952528063]
 layout_mode = 2
-text = "Blender Executable "
+text = "$39"
 
 [node name="Panel" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=753401720]
 layout_mode = 2
@@ -249,18 +267,18 @@ select_all_on_focus = true
 
 [node name="SelectButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1486465546]
 layout_mode = 2
-text = "Pick"
+text = "$34"
 
 [node name="TestButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1145849473]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Test"
+text = "$40"
 
 [node name="BlenderFileDialog" type="FileDialog" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=1645087575]
 oversampling_override = 1.0
-title = "Select the Blender Executable"
+title = "$41"
 size = Vector2i(1017, 360)
-ok_button_text = "Select"
+ok_button_text = "$37"
 mode_overrides_title = false
 file_mode = 0
 access = 2
@@ -269,7 +287,7 @@ use_native_dialog = true
 
 [node name="CheckPopup" type="Popup" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/Panel" unique_id=230596820]
 oversampling_override = 1.0
-title = "Blender Check Result"
+title = "$42"
 initial_position = 4
 size = Vector2i(300, 150)
 borderless = false
@@ -295,7 +313,7 @@ vertical_alignment = 1
 
 [node name="Label2" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=1952528064]
 layout_mode = 2
-text = "Tcp Api "
+text = "$43"
 
 [node name="TcpApiOptions" type="VBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer" unique_id=753401721]
 layout_mode = 2
@@ -303,14 +321,14 @@ size_flags_horizontal = 3
 
 [node name="TcpApiEnabled" type="CheckButton" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=510931248]
 layout_mode = 2
-text = "Enabled"
+text = "$44"
 
 [node name="PortRow" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=753401722]
 layout_mode = 2
 
 [node name="Label" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/PortRow" unique_id=510931251]
 layout_mode = 2
-text = "Port:"
+text = "$45"
 vertical_alignment = 1
 
 [node name="TcpApiPort" type="SpinBox" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/PortRow" unique_id=510931250]
@@ -328,7 +346,7 @@ layout_mode = 2
 [node name="TestButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions/CheckRow" unique_id=1145849474]
 layout_mode = 2
 size_flags_horizontal = 0
-text = "Check"
+text = "$46"
 
 [node name="TestResult" type="Label" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Tools/GridContainer/TcpApiOptions" unique_id=544778144]
 layout_mode = 2
@@ -356,7 +374,7 @@ horizontal_alignment = 1
 [node name="Button" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/VSplitContainer/TabContainer/Appearance/VBoxContainer" unique_id=162378286]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Open Config Mod"
+text = "$47"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer" unique_id=1034507481]
 layout_mode = 2
@@ -366,12 +384,12 @@ theme_override_constants/separation = 12
 [node name="SaveButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer" unique_id=117370136]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Save"
+text = "$48"
 
 [node name="CloseButton" type="Button" parent="SplitContainer/MenuBar/Edit/PreferencesPopup/HBoxContainer/HBoxContainer" unique_id=89208999]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Cancel"
+text = "$49"
 
 [node name="Help" type="PopupMenu" parent="SplitContainer/MenuBar" unique_id=57852837]
 item_count = 2
@@ -455,7 +473,7 @@ offset_right = 45.5
 offset_bottom = 14.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "Open a Mod"
+text = "$50"
 
 [node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/FileTree/OpenModPrompt" unique_id=593285159]
 layout_mode = 1
@@ -466,7 +484,7 @@ offset_left = -62.0
 offset_right = 62.0
 offset_bottom = 20.0
 grow_horizontal = 2
-text = "No open mods yet"
+text = "$51"
 
 [node name="PreviewWindows" type="TabContainer" parent="SplitContainer/VSplitMessages/FileBrowser" unique_id=944148863]
 layout_mode = 2
@@ -488,7 +506,7 @@ metadata/_tab_index = 0
 
 [node name="Label" type="Label" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Error" unique_id=21819628]
 layout_mode = 2
-text = "Cannot parse file"
+text = "$52"
 
 [node name="Model" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=1099297749]
 visible = false
@@ -526,12 +544,12 @@ offset_right = 38.0
 offset_bottom = 31.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
-text = "Edit"
+text = "$4"
 flat = false
 item_count = 2
-popup/item_0/text = "Open in Blender"
+popup/item_0/text = "$53"
 popup/item_0/id = 0
-popup/item_1/text = "Reset Camera"
+popup/item_1/text = "$54"
 popup/item_1/id = 1
 
 [node name="Screen" type="VBoxContainer" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow" unique_id=2066183441]
@@ -609,7 +627,7 @@ item_3/id = 4
 [node name="Run" type="Button" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu/Items" parent_id_path=PackedInt32Array(1128704356, 145936201) index="1" unique_id=1685230447]
 visible = false
 layout_mode = 2
-text = "Run"
+text = "$55"
 
 [node name="Search" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Text/Menu" unique_id=1809190982 node_paths=PackedStringArray("codeedit") instance=ExtResource("17_g07yf")]
 layout_mode = 2
@@ -739,7 +757,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 0
 theme = ExtResource("1_6255r")
-text = "TypeID"
+text = "$56"
 
 [node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/TypeID" unique_id=2018224960]
 layout_mode = 2
@@ -758,7 +776,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 0
 theme = ExtResource("1_6255r")
-text = "Version"
+text = "$57"
 
 [node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/Version" unique_id=1344246765]
 layout_mode = 2
@@ -778,7 +796,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 0
 theme = ExtResource("1_6255r")
-text = "Size"
+text = "$58"
 
 [node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/ShortValues/Size" unique_id=1178009182]
 layout_mode = 2
@@ -798,7 +816,7 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_horizontal = 0
 theme = ExtResource("1_6255r")
-text = "Name"
+text = "$59"
 
 [node name="LineEdit" type="LineEdit" parent="SplitContainer/VSplitMessages/FileBrowser/PreviewWindows/PreviewWindow/Chunky/Preview/Header/Name" unique_id=362035557]
 layout_mode = 2
@@ -834,7 +852,7 @@ metadata/_tab_index = 8
 layout_mode = 2
 size_flags_vertical = 8
 folded = true
-title = "Messages"
+title = "$60"
 title_text_overrun_behavior = 3
 script = ExtResource("18_kovvv")
 max_messages = 50
